@@ -1,0 +1,79 @@
+:root {
+    --primary-dark: #30364F;
+    --secondary-muted: #ACBAC4;
+    --surface-warm: #E1D9BC;
+    --background-light: #F0F0DB;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    width: 100%;
+    background-color: var(--background-light);
+    font-family: Arial, sans-serif;
+}
+
+main {
+    padding: 20px;
+}
+
+/* Buttons */
+button {
+    padding: 10px 16px;
+    margin-right: 8px;
+    margin-bottom: 12px;
+    background-color: var(--primary-dark);
+    color: var(--background-light);
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #3a4160;
+}
+
+button:active {
+    transform: scale(0.97);
+}
+
+/* Canvas */
+.canvas {
+    height: 500px;
+    width: 500px;
+    background-color: var(--surface-warm);
+    border: 2px dashed var(--secondary-muted);
+    position: relative;
+}
+
+/* Rectangle */
+.rect {
+    width: 80px;
+    height: 80px;
+    background-color: var(--primary-dark);
+    border: 2px solid var(--secondary-muted);
+    position: absolute;
+}
+
+/* Text Box */
+.text-box {
+    width: 120px;
+    height: 40px;
+    background-color: var(--background-light);
+    border: 1.5px solid var(--secondary-muted);
+    color: var(--primary-dark);
+    font-size: 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: absolute;
+    cursor: default;
+}
