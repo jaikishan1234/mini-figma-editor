@@ -77,3 +77,46 @@ button:active {
     position: absolute;
     cursor: default;
 }
+
+/* Selected element ko highlight karne ke liye */
+.selected {
+    outline: 2px solid #30364F;
+    outline-offset: 2px;
+}
+
+/* Resize handle ka basic style */
+.resize-handle {
+    width: 8px;
+    height: 8px;
+    background-color: #30364F;
+    position: absolute;
+    z-index: 10;
+}
+
+/* Top-left corner ka resize handle */
+.resize-handle.top-left {
+    top: -4px;
+    left: -4px;
+    cursor: nwse-resize;
+}
+
+/* Top-right corner ka resize handle */
+.resize-handle.top-right {
+    top: -4px;
+    right: -4px;
+    cursor: nesw-resize;
+}
+
+/* Bottom-left corner ka resize handle */
+.resize-handle.bottom-left {
+    bottom: -4px;
+    left: -4px;
+    cursor: nesw-resize;
+}
+
+/* Bottom-right corner ka resize handle */
+.resize-handle.bottom-right {
+    bottom: -4px;
+    right: -4px;
+    cursor: nwse-resize;
+}
