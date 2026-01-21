@@ -1,100 +1,129 @@
 // Canvas aur buttons select kar rahe hain
-const canvas = document.querySelector('.canvas');
-const addRectBtn = document.querySelector('#addRectBtn');
-const addTextBtn = document.querySelector('#addTextBtn');
-const removeBtn = document.querySelector('#removeBtn');
+const canvas = document.querySelector(".canvas");
+const addRectBtn = document.querySelector("#addRectBtn");
+const addTextBtn = document.querySelector("#addTextBtn");
+const removeBtn = document.querySelector("#removeBtn");
+
+// Currently selected element ko store karne ke liye
+let selectedElement = null;
 
 // Unique ID generate karne ke liye counter
 let elementCounter = 0;
 
+// Resize handles add karne ka function
+function addResizeHandles(element) {
+  const positions = ["top-left", "top-right", "bottom-left", "bottom-right"];
+
+  positions.forEach((pos) => {
+    const handle = document.createElement("div");
+    handle.classList.add("resize-handle", pos);
+    element.appendChild(handle);
+  });
+}
+
+// Resize handles remove karne ka function
+function removeResizeHandles(element) {
+  const handles = element.querySelectorAll(".resize-handle");
+  handles.forEach((handle) => handle.remove());
+}
+
+// Element ko select karne ka common function
+function selectElement(element) {
+  // Agar pehle koi selected element hai to uska selection hatao
+  if (selectedElement) {
+    selectedElement.classList.remove("selected");
+    removeResizeHandles(selectedElement);
+  }
+
+  // Naye element ko select karo
+  selectedElement = element;
+  selectedElement.classList.add("selected");
+
+  // Selected element pe resize handles add karo
+  addResizeHandles(selectedElement);
+}
+
 // Add Rectangle button logic
 addRectBtn.addEventListener("click", function () {
+  const rect = document.createElement("div");
+  rect.classList.add("rect");
 
-    // Rectangle ke liye naya div bana rahe hain
-    const rect = document.createElement("div");
-    rect.classList.add("rect");
+  elementCounter++;
+  rect.id = `element-${elementCounter}`;
+  rect.dataset.type = "rectangle";
 
-    // Unique ID assign kar rahe hain
-    elementCounter++;
-    rect.id = `element-${elementCounter}`;
+  const canvasWidth = canvas.clientWidth;
+  const canvasHeight = canvas.clientHeight;
 
-    // Rectangle ka type metadata me store kar rahe hain
-    rect.dataset.type = "rectangle";
+  const rectWidth = 80;
+  const rectHeight = 80;
 
-    // Canvas ka size nikaal rahe hain
-    const canvasWidth = canvas.clientWidth;
-    const canvasHeight = canvas.clientHeight;
+  const maxX = canvasWidth - rectWidth;
+  const maxY = canvasHeight - rectHeight;
 
-    // Rectangle ka default size
-    const rectWidth = 80;
-    const rectHeight = 80;
+  rect.style.left = `${Math.random() * maxX}px`;
+  rect.style.top = `${Math.random() * maxY}px`;
 
-    // Canvas ke andar safe position calculate kar rahe hain
-    const maxX = canvasWidth - rectWidth;
-    const maxY = canvasHeight - rectHeight;
+  // Rectangle pe click hone par select hoga
+  rect.addEventListener("click", function (e) {
+    e.stopPropagation();
+    selectElement(rect);
+  });
 
-    // Random position generate kar rahe hain
-    const randomX = Math.random() * maxX;
-    const randomY = Math.random() * maxY;
-
-    // Rectangle ko position de rahe hain
-    rect.style.left = `${randomX}px`;
-    rect.style.top = `${randomY}px`;
-
-    // Rectangle ko canvas me add kar rahe hain
-    canvas.appendChild(rect);
+  canvas.appendChild(rect);
 });
 
 // Add Text button logic
 addTextBtn.addEventListener("click", function () {
+  const textBox = document.createElement("div");
+  textBox.classList.add("text-box");
+  textBox.textContent = "Text";
 
-    // Text box ke liye naya div bana rahe hain
-    const textBox = document.createElement("div");
-    textBox.classList.add("text-box");
+  elementCounter++;
+  textBox.id = `element-${elementCounter}`;
+  textBox.dataset.type = "text";
 
-    // Default text set kar rahe hain
-    textBox.textContent = "Text";
+  const canvasWidth = canvas.clientWidth;
+  const canvasHeight = canvas.clientHeight;
 
-    // Unique ID assign kar rahe hain
-    elementCounter++;
-    textBox.id = `element-${elementCounter}`;
+  const textWidth = 120;
+  const textHeight = 40;
 
-    // Text element ka type metadata me store kar rahe hain
-    textBox.dataset.type = "text";
+  const maxX = canvasWidth - textWidth;
+  const maxY = canvasHeight - textHeight;
 
-    // Canvas ka size nikaal rahe hain
-    const canvasWidth = canvas.clientWidth;
-    const canvasHeight = canvas.clientHeight;
+  textBox.style.left = `${Math.random() * maxX}px`;
+  textBox.style.top = `${Math.random() * maxY}px`;
 
-    // Text box ka default size
-    const textWidth = 120;
-    const textHeight = 40;
+  // Text box pe click hone par select hoga
+  textBox.addEventListener("click", function (e) {
+    e.stopPropagation();
+    selectElement(textBox);
+  });
 
-    // Canvas ke andar safe position calculate kar rahe hain
-    const maxX = canvasWidth - textWidth;
-    const maxY = canvasHeight - textHeight;
-
-    // Random position generate kar rahe hain
-    const randomX = Math.random() * maxX;
-    const randomY = Math.random() * maxY;
-
-    // Text box ko position de rahe hain
-    textBox.style.left = `${randomX}px`;
-    textBox.style.top = `${randomY}px`;
-
-    // Text box ko canvas me add kar rahe hain
-    canvas.appendChild(textBox);
+  canvas.appendChild(textBox);
 });
 
-// REMOVE LAST ELEMENT
+// Canvas pe click karne par selection clear ho jayega
+canvas.addEventListener("click", function () {
+  if (selectedElement) {
+    selectedElement.classList.remove("selected");
+    removeResizeHandles(selectedElement);
+    selectedElement = null;
+  }
+});
+
+// REMOVE SELECTED ELEMENT
 removeBtn.addEventListener("click", function () {
+  // Agar koi element selected nahi hai to kuch mat karo
+  if (!selectedElement) return;
 
-    // Canvas ke andar saare elements select kar rahe hain
-    const elements = canvas.querySelectorAll('.rect, .text-box');
+  // Selected element ke resize handles hata rahe hain
+  removeResizeHandles(selectedElement);
 
-    // Agar koi element hai tab hi remove karo
-    if (elements.length > 0) {
-        const lastElement = elements[elements.length - 1];
-        lastElement.remove();
-    }
+  // Selected element ko DOM se remove kar rahe hain
+  selectedElement.remove();
+
+  // Selection state clear kar rahe hain
+  selectedElement = null;
 });
