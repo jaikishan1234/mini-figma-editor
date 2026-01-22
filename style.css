@@ -91,6 +91,7 @@ button:active {
     background-color: #30364F;
     position: absolute;
     z-index: 10;
+    pointer-events: auto
 }
 
 /* Top-left corner ka resize handle */
@@ -119,4 +120,36 @@ button:active {
     bottom: -4px;
     right: -4px;
     cursor: nwse-resize;
+}
+
+/* Rotation handle style */
+.rotate-handle {
+    width: 12px;
+    height: 12px;
+    background-color: #30364F;
+    border-radius: 50%;
+    position: absolute;
+    top: -25px; /* Positioned above the element */
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: grab;
+    z-index: 10;
+}
+
+/* Connecting line from element to rotate handle */
+.rotate-handle::after {
+    content: "";
+    width: 2px;
+    height: 15px;
+    background-color: #30364F;
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.rect,
+.text-box {
+    transform-origin: center center;
+    user-select: none;
 }
