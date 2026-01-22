@@ -6,6 +6,9 @@ const removeBtn = document.querySelector("#removeBtn");
 
 // Currently selected element ko store karne ke liye
 let selectedElement = null;
+let isDragging = false;
+let offsetX = 0;
+let offsetY = 0;
 
 // Unique ID generate karne ke liye counter
 let elementCounter = 0;
@@ -65,9 +68,17 @@ addRectBtn.addEventListener("click", function () {
   rect.style.top = `${Math.random() * maxY}px`;
 
   // Rectangle pe click hone par select hoga
-  rect.addEventListener("click", function (e) {
+  rect.addEventListener("mousedown", function (e) {
     e.stopPropagation();
+
     selectElement(rect);
+
+    // Drag start
+    isDragging = true;
+
+    const rectBounds = rect.getBoundingClientRect();
+    offsetX = e.clientX - rectBounds.left;
+    offsetY = e.clientY - rectBounds.top;
   });
 
   canvas.appendChild(rect);
@@ -96,9 +107,17 @@ addTextBtn.addEventListener("click", function () {
   textBox.style.top = `${Math.random() * maxY}px`;
 
   // Text box pe click hone par select hoga
-  textBox.addEventListener("click", function (e) {
+  textBox.addEventListener("mousedown", function (e) {
     e.stopPropagation();
+
     selectElement(textBox);
+
+    // Drag start
+    isDragging = true;
+
+    const textBounds = textBox.getBoundingClientRect();
+    offsetX = e.clientX - textBounds.left;
+    offsetY = e.clientY - textBounds.top;
   });
 
   canvas.appendChild(textBox);
@@ -126,4 +145,52 @@ removeBtn.addEventListener("click", function () {
 
   // Selection state clear kar rahe hain
   selectedElement = null;
+});
+
+
+// Mouse move event – jab mouse move hota hai (drag ke time)
+document.addEventListener("mousemove", function (e) {
+
+  // Agar drag start nahi hua ya koi element selected nahi hai
+  // to kuch bhi mat karo
+  if (!isDragging || !selectedElement) return;
+
+  // Canvas ka position viewport ke hisaab se nikal rahe hain
+  const canvasRect = canvas.getBoundingClientRect();
+
+  // Mouse ke position ke basis par element ka naya left/top calculate
+  // clientX/Y → viewport position
+  // canvasRect.left/top → canvas ka offset
+  // offsetX/Y → mouse aur element ke beech ka gap (jump hone se bachata hai)
+  let newLeft = e.clientX - canvasRect.left - offsetX;
+  let newTop = e.clientY - canvasRect.top - offsetY;
+
+  // Selected element ka current width aur height
+  const elementWidth = selectedElement.offsetWidth;
+  const elementHeight = selectedElement.offsetHeight;
+
+  // Maximum allowed position taaki element canvas ke bahar na jaye
+  const maxX = canvas.clientWidth - elementWidth;
+  const maxY = canvas.clientHeight - elementHeight;
+
+  // Left boundary check (left side se bahar na jaye)
+  if (newLeft < 0) newLeft = 0;
+
+  // Top boundary check (upar se bahar na jaye)
+  if (newTop < 0) newTop = 0;
+
+  // Right boundary check (right side se bahar na jaye)
+  if (newLeft > maxX) newLeft = maxX;
+
+  // Bottom boundary check (neeche se bahar na jaye)
+  if (newTop > maxY) newTop = maxY;
+
+  // Final calculated position element par apply kar rahe hain
+  selectedElement.style.left = `${newLeft}px`;
+  selectedElement.style.top = `${newTop}px`;
+});
+
+
+document.addEventListener("mouseup", function () {
+  isDragging = false;
 });
