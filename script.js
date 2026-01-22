@@ -1,196 +1,341 @@
-// Canvas aur buttons select kar rahe hain
+// Canvas aur buttons ko DOM se select kar rahe hain
 const canvas = document.querySelector(".canvas");
 const addRectBtn = document.querySelector("#addRectBtn");
 const addTextBtn = document.querySelector("#addTextBtn");
 const removeBtn = document.querySelector("#removeBtn");
 
-// Currently selected element ko store karne ke liye
+// Abhi kaunsa element selected hai
 let selectedElement = null;
+
+// Interaction states
 let isDragging = false;
+let isResizing = false;
+let isRotating = false;
+
+// Kaunsa resize handle active hai
+let currentHandle = null;
+
+// Drag ke liye mouse offset (element ke andar ka gap)
 let offsetX = 0;
 let offsetY = 0;
 
-// Unique ID generate karne ke liye counter
+// Resize ke start par mouse aur element ka snapshot
+let startMouseX = 0;
+let startMouseY = 0;
+let startWidth = 0;
+let startHeight = 0;
+let startLeft = 0;
+let startTop = 0;
+
+// Rotation ke liye starting angle values
+let startAngle = 0;
+let currentRotation = 0;
+
+// Unique ID ke liye counter
 let elementCounter = 0;
 
-// Resize handles add karne ka function
-function addResizeHandles(element) {
+// Minimum size taaki element negative ya invisible na ho
+const MIN_SIZE = 20;
+
+
+/*
+  Ye function selected element ke liye
+  - 4 resize handles
+  - 1 rotate handle
+  add karta hai
+*/
+function addControls(element) {
+
+  // 4 corners ke resize handles
   const positions = ["top-left", "top-right", "bottom-left", "bottom-right"];
 
   positions.forEach((pos) => {
     const handle = document.createElement("div");
     handle.classList.add("resize-handle", pos);
+
+    // Resize handle pe mouse down ka matlab resize start
+    handle.addEventListener("mousedown", (e) => {
+      e.stopPropagation();   // drag ya canvas click ko roko
+      e.preventDefault();
+
+      // Resize mode ON
+      isResizing = true;
+      isDragging = false;
+      isRotating = false;
+
+      currentHandle = pos;
+
+      // Resize start ke time mouse position store
+      startMouseX = e.clientX;
+      startMouseY = e.clientY;
+
+      // Resize start ke time element ka size & position store
+      startWidth = element.offsetWidth;
+      startHeight = element.offsetHeight;
+      startLeft = element.offsetLeft;
+      startTop = element.offsetTop;
+    });
+
     element.appendChild(handle);
   });
+
+  // Rotation handle
+  const rotateHandle = document.createElement("div");
+  rotateHandle.classList.add("rotate-handle");
+
+  rotateHandle.addEventListener("mousedown", (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    // Rotation mode ON
+    isRotating = true;
+    isDragging = false;
+    isResizing = false;
+
+    // Element ke center ka position nikal rahe hain
+    const rect = element.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    // Mouse aur center ke beech ka angle
+    const radians = Math.atan2(
+      e.clientY - centerY,
+      e.clientX - centerX
+    );
+
+    startAngle = radians * (180 / Math.PI);
+
+    // Agar pehle se rotation hai to usko yaad rakho
+    currentRotation = parseFloat(element.dataset.rotation || 0);
+  });
+
+  element.appendChild(rotateHandle);
 }
 
-// Resize handles remove karne ka function
-function removeResizeHandles(element) {
-  const handles = element.querySelectorAll(".resize-handle");
-  handles.forEach((handle) => handle.remove());
+
+// Selected element se saare handles remove karne ke liye
+function removeControls(element) {
+  element
+    .querySelectorAll(".resize-handle, .rotate-handle")
+    .forEach((h) => h.remove());
 }
 
-// Element ko select karne ka common function
+
+/*
+  Element select karne ka logic
+  - purana deselect
+  - naya select
+  - rotation restore
+*/
 function selectElement(element) {
-  // Agar pehle koi selected element hai to uska selection hatao
   if (selectedElement) {
     selectedElement.classList.remove("selected");
-    removeResizeHandles(selectedElement);
+    removeControls(selectedElement);
   }
 
-  // Naye element ko select karo
   selectedElement = element;
   selectedElement.classList.add("selected");
 
-  // Selected element pe resize handles add karo
-  addResizeHandles(selectedElement);
+  // Agar rotation pehle se nahi hai to default 0
+  if (!selectedElement.dataset.rotation) {
+    selectedElement.dataset.rotation = 0;
+  }
+
+  // Saved rotation apply karo
+  selectedElement.style.transform =
+    `rotate(${selectedElement.dataset.rotation}deg)`;
+
+  addControls(selectedElement);
 }
 
-// Add Rectangle button logic
-addRectBtn.addEventListener("click", function () {
-  const rect = document.createElement("div");
-  rect.classList.add("rect");
+
+/*
+  Rectangle aur Text dono ke liye base element creator
+*/
+function createBaseElement(type, width, height) {
+  const el = document.createElement("div");
 
   elementCounter++;
-  rect.id = `element-${elementCounter}`;
-  rect.dataset.type = "rectangle";
+  el.id = `element-${elementCounter}`;
+  el.dataset.type = type;
 
-  const canvasWidth = canvas.clientWidth;
-  const canvasHeight = canvas.clientHeight;
+  // Canvas ke andar random position
+  const maxX = canvas.clientWidth - width;
+  const maxY = canvas.clientHeight - height;
 
-  const rectWidth = 80;
-  const rectHeight = 80;
+  el.style.left = `${Math.random() * maxX}px`;
+  el.style.top = `${Math.random() * maxY}px`;
+  el.style.width = `${width}px`;
+  el.style.height = `${height}px`;
 
-  const maxX = canvasWidth - rectWidth;
-  const maxY = canvasHeight - rectHeight;
+  // Mouse down = select + drag start
+  el.addEventListener("mousedown", (e) => {
+    // Agar resize/rotate chal raha ho ya handle pe click ho
+    if (
+      isResizing ||
+      isRotating ||
+      e.target.classList.contains("resize-handle") ||
+      e.target.classList.contains("rotate-handle")
+    ) return;
 
-  rect.style.left = `${Math.random() * maxX}px`;
-  rect.style.top = `${Math.random() * maxY}px`;
-
-  // Rectangle pe click hone par select hoga
-  rect.addEventListener("mousedown", function (e) {
     e.stopPropagation();
+    selectElement(el);
 
-    selectElement(rect);
-
-    // Drag start
     isDragging = true;
 
-    const rectBounds = rect.getBoundingClientRect();
-    offsetX = e.clientX - rectBounds.left;
-    offsetY = e.clientY - rectBounds.top;
+    // Mouse aur element ke beech ka offset
+    const rect = el.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
   });
 
-  canvas.appendChild(rect);
-});
+  return el;
+}
 
-// Add Text button logic
-addTextBtn.addEventListener("click", function () {
-  const textBox = document.createElement("div");
-  textBox.classList.add("text-box");
-  textBox.textContent = "Text";
 
-  elementCounter++;
-  textBox.id = `element-${elementCounter}`;
-  textBox.dataset.type = "text";
+// Buttons
+addRectBtn.onclick = () => {
+  const r = createBaseElement("rectangle", 80, 80);
+  r.classList.add("rect");
+  canvas.appendChild(r);
+};
 
-  const canvasWidth = canvas.clientWidth;
-  const canvasHeight = canvas.clientHeight;
+addTextBtn.onclick = () => {
+  const t = createBaseElement("text", 120, 40);
+  t.classList.add("text-box");
+  t.textContent = "Text Box";
+  canvas.appendChild(t);
+};
 
-  const textWidth = 120;
-  const textHeight = 40;
 
-  const maxX = canvasWidth - textWidth;
-  const maxY = canvasHeight - textHeight;
+/*
+  Global mousemove
+  Yahin drag, resize, rotate sab handle hota hai
+*/
+document.addEventListener("mousemove", (e) => {
+  if (!selectedElement) return;
 
-  textBox.style.left = `${Math.random() * maxX}px`;
-  textBox.style.top = `${Math.random() * maxY}px`;
+  const canvasRect = canvas.getBoundingClientRect();
 
-  // Text box pe click hone par select hoga
-  textBox.addEventListener("mousedown", function (e) {
-    e.stopPropagation();
+  // ROTATION LOGIC
+  if (isRotating) {
+    const rect = selectedElement.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
 
-    selectElement(textBox);
+    const radians = Math.atan2(
+      e.clientY - cy,
+      e.clientX - cx
+    );
 
-    // Drag start
-    isDragging = true;
+    const angle = radians * (180 / Math.PI);
+    const finalAngle = currentRotation + (angle - startAngle);
 
-    const textBounds = textBox.getBoundingClientRect();
-    offsetX = e.clientX - textBounds.left;
-    offsetY = e.clientY - textBounds.top;
-  });
+    selectedElement.style.transform =
+      `rotate(${finalAngle}deg)`;
 
-  canvas.appendChild(textBox);
-});
+    selectedElement.dataset.rotation = finalAngle;
+    return;
+  }
 
-// Canvas pe click karne par selection clear ho jayega
-canvas.addEventListener("click", function () {
-  if (selectedElement) {
-    selectedElement.classList.remove("selected");
-    removeResizeHandles(selectedElement);
-    selectedElement = null;
+  // RESIZE LOGIC (rotation-safe)
+  if (isResizing) {
+    const dx = e.clientX - startMouseX;
+    const dy = e.clientY - startMouseY;
+
+    let newWidth = startWidth;
+    let newHeight = startHeight;
+    let newLeft = startLeft;
+    let newTop = startTop;
+
+    if (currentHandle === "bottom-right") {
+      newWidth += dx;
+      newHeight += dy;
+    } else if (currentHandle === "bottom-left") {
+      newWidth -= dx;
+      newLeft += dx;
+      newHeight += dy;
+    } else if (currentHandle === "top-right") {
+      newWidth += dx;
+      newHeight -= dy;
+      newTop += dy;
+    } else if (currentHandle === "top-left") {
+      newWidth -= dx;
+      newLeft += dx;
+      newHeight -= dy;
+      newTop += dy;
+    }
+
+    // Minimum size
+    newWidth = Math.max(newWidth, MIN_SIZE);
+    newHeight = Math.max(newHeight, MIN_SIZE);
+
+    // Temporarily apply resize
+    selectedElement.style.width = `${newWidth}px`;
+    selectedElement.style.height = `${newHeight}px`;
+    selectedElement.style.left = `${newLeft}px`;
+    selectedElement.style.top = `${newTop}px`;
+
+    // Rotated bounding box check
+    const bounds = selectedElement.getBoundingClientRect();
+    if (
+      bounds.left < canvasRect.left ||
+      bounds.top < canvasRect.top ||
+      bounds.right > canvasRect.right ||
+      bounds.bottom > canvasRect.bottom
+    ) {
+      // Agar canvas se bahar ja raha hai to revert
+      selectedElement.style.width = `${startWidth}px`;
+      selectedElement.style.height = `${startHeight}px`;
+      selectedElement.style.left = `${startLeft}px`;
+      selectedElement.style.top = `${startTop}px`;
+    }
+
+    return;
+  }
+
+  // DRAG LOGIC
+  if (isDragging) {
+    const mouseX = e.clientX - canvasRect.left;
+    const mouseY = e.clientY - canvasRect.top;
+
+    let newLeft = mouseX - offsetX;
+    let newTop = mouseY - offsetY;
+
+    const maxX = canvas.clientWidth - selectedElement.offsetWidth;
+    const maxY = canvas.clientHeight - selectedElement.offsetHeight;
+
+    selectedElement.style.left =
+      `${Math.max(0, Math.min(newLeft, maxX))}px`;
+    selectedElement.style.top =
+      `${Math.max(0, Math.min(newTop, maxY))}px`;
   }
 });
 
-// REMOVE SELECTED ELEMENT
-removeBtn.addEventListener("click", function () {
-  // Agar koi element selected nahi hai to kuch mat karo
-  if (!selectedElement) return;
 
-  // Selected element ke resize handles hata rahe hain
-  removeResizeHandles(selectedElement);
-
-  // Selected element ko DOM se remove kar rahe hain
-  selectedElement.remove();
-
-  // Selection state clear kar rahe hain
-  selectedElement = null;
-});
-
-
-// Mouse move event – jab mouse move hota hai (drag ke time)
-document.addEventListener("mousemove", function (e) {
-
-  // Agar drag start nahi hua ya koi element selected nahi hai
-  // to kuch bhi mat karo
-  if (!isDragging || !selectedElement) return;
-
-  // Canvas ka position viewport ke hisaab se nikal rahe hain
-  const canvasRect = canvas.getBoundingClientRect();
-
-  // Mouse ke position ke basis par element ka naya left/top calculate
-  // clientX/Y → viewport position
-  // canvasRect.left/top → canvas ka offset
-  // offsetX/Y → mouse aur element ke beech ka gap (jump hone se bachata hai)
-  let newLeft = e.clientX - canvasRect.left - offsetX;
-  let newTop = e.clientY - canvasRect.top - offsetY;
-
-  // Selected element ka current width aur height
-  const elementWidth = selectedElement.offsetWidth;
-  const elementHeight = selectedElement.offsetHeight;
-
-  // Maximum allowed position taaki element canvas ke bahar na jaye
-  const maxX = canvas.clientWidth - elementWidth;
-  const maxY = canvas.clientHeight - elementHeight;
-
-  // Left boundary check (left side se bahar na jaye)
-  if (newLeft < 0) newLeft = 0;
-
-  // Top boundary check (upar se bahar na jaye)
-  if (newTop < 0) newTop = 0;
-
-  // Right boundary check (right side se bahar na jaye)
-  if (newLeft > maxX) newLeft = maxX;
-
-  // Bottom boundary check (neeche se bahar na jaye)
-  if (newTop > maxY) newTop = maxY;
-
-  // Final calculated position element par apply kar rahe hain
-  selectedElement.style.left = `${newLeft}px`;
-  selectedElement.style.top = `${newTop}px`;
-});
-
-
-document.addEventListener("mouseup", function () {
+// Mouse chhodte hi sab modes band
+document.addEventListener("mouseup", () => {
   isDragging = false;
+  isResizing = false;
+  isRotating = false;
+  currentHandle = null;
 });
+
+
+// Canvas click par deselect
+canvas.onclick = (e) => {
+  if (e.target === canvas && selectedElement) {
+    selectedElement.classList.remove("selected");
+    removeControls(selectedElement);
+    selectedElement = null;
+  }
+};
+
+
+// Remove button
+removeBtn.onclick = () => {
+  if (!selectedElement) return;
+  removeControls(selectedElement);
+  selectedElement.remove();
+  selectedElement = null;
+};
