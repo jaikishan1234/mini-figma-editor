@@ -1,25 +1,35 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Figma</title>
-    <link rel="icon" type="image/png" href="/Images/figma.png">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini Figma Editor</title>
+  <link rel="icon" type="image/png" href="/Images/figma.png">
+  <link rel="stylesheet" href="style.css">
+</head>
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/remixicon@4.8.0/fonts/remixicon.css"
-        rel="stylesheet"
-    />
-    <link rel="stylesheet" href="style.css">
-  </head>
-  <body>
-    <main>
+<body>
+  <main>
+    <div class="top-controls">
       <button id="addRectBtn">Add Rectangle</button>
       <button id="addTextBtn">Add Text</button>
       <button id="removeBtn">Remove</button>
-      <div class="canvas"></div>
-    </main>
+    </div>
 
-    <script src="script.js"></script>
-  </body>
+    <div class="editor">
+      <div class="layers-panel">
+        <h3>Layers</h3>
+        <div id="layersList"></div>
+        <div class="layer-controls">
+          <button id="moveUpBtn">Move Up</button>
+          <button id="moveDownBtn">Move Down</button>
+        </div>
+      </div>
+
+      <div class="canvas"></div>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
 </html>

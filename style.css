@@ -153,3 +153,54 @@ button:active {
     transform-origin: center center;
     user-select: none;
 }
+
+/* LAYERS PANEL*/
+
+/* Layout wrapper (canvas + layers) */
+.editor {
+    display: flex;
+    gap: 20px;
+}
+
+/* Layers panel container */
+.layers-panel {
+    width: 220px;
+    background-color: var(--surface-warm);
+    border: 2px solid var(--secondary-muted);
+    padding: 12px;
+}
+
+/* Layers panel title */
+.layers-panel h3 {
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: var(--primary-dark);
+}
+
+/* List container */
+#layersList {
+    margin-bottom: 10px;
+}
+
+/* Individual layer item */
+.layer-item {
+    padding: 6px 8px;
+    background-color: var(--background-light);
+    border: 1px solid var(--secondary-muted);
+    margin-bottom: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+/* Active / selected layer */
+.layer-item.active {
+    background-color: var(--primary-dark);
+    color: var(--background-light);
+}
+
+/* Move up / down buttons */
+.layer-controls {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+}
