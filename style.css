@@ -1,206 +1,261 @@
 :root {
-    --primary-dark: #30364F;
-    --secondary-muted: #ACBAC4;
-    --surface-warm: #E1D9BC;
-    --background-light: #F0F0DB;
+  --primary-dark: #30364F;
+  --secondary-muted: #ACBAC4;
+  --surface-warm: #E1D9BC;
+  --background-light: #F0F0DB;
 }
 
+/* ---------------- RESET ---------------- */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-html, body {
-    height: 100%;
-    width: 100%;
-    background-color: var(--background-light);
-    font-family: Arial, sans-serif;
+html,
+body {
+  height: 100%;
+  width: 100%;
+  background-color: var(--background-light);
+  font-family: Arial, sans-serif;
+  overflow: hidden;
 }
 
+/* ---------------- APP WRAPPER ---------------- */
 main {
-    padding: 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------------- TOP CONTROLS ---------------- */
+.top-controls {
+  padding: 10px 16px;
 }
 
 /* Buttons */
 button {
-    padding: 10px 16px;
-    margin-right: 8px;
-    margin-bottom: 12px;
-    background-color: var(--primary-dark);
-    color: var(--background-light);
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    cursor: pointer;
+  padding: 10px 16px;
+  margin-right: 8px;
+  background-color: var(--primary-dark);
+  color: var(--background-light);
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 button:hover {
-    background-color: #3a4160;
+  background-color: #3a4160;
 }
 
 button:active {
-    transform: scale(0.97);
+  transform: scale(0.97);
 }
 
-/* Canvas */
-.canvas {
-    height: 500px;
-    width: 500px;
-    background-color: var(--surface-warm);
-    border: 2px dashed var(--secondary-muted);
-    position: relative;
-}
-
-/* Rectangle */
-.rect {
-    width: 80px;
-    height: 80px;
-    background-color: var(--primary-dark);
-    border: 2px solid var(--secondary-muted);
-    position: absolute;
-}
-
-/* Text Box */
-.text-box {
-    width: 120px;
-    height: 40px;
-    background-color: var(--background-light);
-    border: 1.5px solid var(--secondary-muted);
-    color: var(--primary-dark);
-    font-size: 14px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    position: absolute;
-    cursor: default;
-}
-
-/* Selected element ko highlight karne ke liye */
-.selected {
-    outline: 2px solid #30364F;
-    outline-offset: 2px;
-}
-
-/* Resize handle ka basic style */
-.resize-handle {
-    width: 8px;
-    height: 8px;
-    background-color: #30364F;
-    position: absolute;
-    z-index: 10;
-    pointer-events: auto
-}
-
-/* Top-left corner ka resize handle */
-.resize-handle.top-left {
-    top: -4px;
-    left: -4px;
-    cursor: nwse-resize;
-}
-
-/* Top-right corner ka resize handle */
-.resize-handle.top-right {
-    top: -4px;
-    right: -4px;
-    cursor: nesw-resize;
-}
-
-/* Bottom-left corner ka resize handle */
-.resize-handle.bottom-left {
-    bottom: -4px;
-    left: -4px;
-    cursor: nesw-resize;
-}
-
-/* Bottom-right corner ka resize handle */
-.resize-handle.bottom-right {
-    bottom: -4px;
-    right: -4px;
-    cursor: nwse-resize;
-}
-
-/* Rotation handle style */
-.rotate-handle {
-    width: 12px;
-    height: 12px;
-    background-color: #30364F;
-    border-radius: 50%;
-    position: absolute;
-    top: -25px; /* Positioned above the element */
-    left: 50%;
-    transform: translateX(-50%);
-    cursor: grab;
-    z-index: 10;
-}
-
-/* Connecting line from element to rotate handle */
-.rotate-handle::after {
-    content: "";
-    width: 2px;
-    height: 15px;
-    background-color: #30364F;
-    position: absolute;
-    bottom: -15px;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-.rect,
-.text-box {
-    transform-origin: center center;
-    user-select: none;
-}
-
-/* LAYERS PANEL*/
-
-/* Layout wrapper (canvas + layers) */
+/* ---------------- MAIN EDITOR LAYOUT ---------------- */
 .editor {
-    display: flex;
-    gap: 20px;
+  flex: 1;
+  display: flex;
+  height: 100%;
+  overflow: hidden;
 }
 
-/* Layers panel container */
+/* ---------------- LEFT PANEL (LAYERS) ---------------- */
 .layers-panel {
-    width: 220px;
-    background-color: var(--surface-warm);
-    border: 2px solid var(--secondary-muted);
-    padding: 12px;
+  width: 240px;
+  height: 100%;
+  background-color: var(--surface-warm);
+  border-right: 2px solid var(--secondary-muted);
+  padding: 12px;
 }
 
 /* Layers panel title */
 .layers-panel h3 {
-    margin-bottom: 10px;
-    font-size: 16px;
-    color: var(--primary-dark);
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: var(--primary-dark);
 }
 
-/* List container */
 #layersList {
-    margin-bottom: 10px;
+  margin-bottom: 10px;
 }
 
-/* Individual layer item */
 .layer-item {
-    padding: 6px 8px;
-    background-color: var(--background-light);
-    border: 1px solid var(--secondary-muted);
-    margin-bottom: 6px;
-    cursor: pointer;
-    font-size: 14px;
+  padding: 6px 8px;
+  background-color: var(--background-light);
+  border: 1px solid var(--secondary-muted);
+  margin-bottom: 6px;
+  cursor: pointer;
+  font-size: 14px;
 }
 
-/* Active / selected layer */
 .layer-item.active {
-    background-color: var(--primary-dark);
-    color: var(--background-light);
+  background-color: var(--primary-dark);
+  color: var(--background-light);
 }
 
-/* Move up / down buttons */
 .layer-controls {
-    display: flex;
-    gap: 6px;
-    margin-top: 10px;
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+/* ---------------- CENTER WORKSPACE ---------------- */
+.workspace {
+  flex: 1;
+  overflow: auto;
+  padding: 40px 60px;
+  background-color: var(--background-light);
+
+  overflow: auto;
+}
+
+/* Canvas (artboard) */
+.canvas {
+  width: 1200px;
+  height: 800px;
+  background-color: var(--surface-warm);
+  border: 2px dashed var(--secondary-muted);
+  position: relative;
+
+  /* Floating feel */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.canvas-wrapper {
+  min-width: max-content;
+  min-height: max-content;
+}
+
+/* ---------------- RIGHT PANEL (PROPERTIES) ---------------- */
+.properties-panel {
+  width: 260px;
+  height: 100%;
+  background-color: var(--surface-warm);
+  border-left: 2px solid var(--secondary-muted);
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.properties-panel h3 {
+  margin-bottom: 15px;
+  font-size: 16px;
+  color: var(--primary-dark);
+  border-bottom: 1px solid var(--secondary-muted);
+  padding-bottom: 5px;
+}
+
+.properties-panel label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  margin-bottom: 12px;
+  color: var(--primary-dark);
+  font-weight: bold;
+}
+
+.properties-panel input {
+  width: 110px;
+  padding: 4px;
+  border: 1px solid var(--secondary-muted);
+  background-color: var(--background-light);
+  border-radius: 4px;
+  color: var(--primary-dark);
+  outline: none;
+}
+
+.properties-panel input:focus {
+  border-color: var(--primary-dark);
+}
+
+#textOnlyProperty input {
+  width: 100%;
+}
+
+/* ---------------- CANVAS ELEMENTS ---------------- */
+.rect {
+  width: 80px;
+  height: 80px;
+  background-color: var(--primary-dark);
+  border: 2px solid var(--secondary-muted);
+  position: absolute;
+}
+
+.text-box {
+  width: 120px;
+  height: 40px;
+  background-color: var(--background-light);
+  border: 1.5px solid var(--secondary-muted);
+  color: var(--primary-dark);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  user-select: none;
+}
+
+/* Selected outline */
+.selected {
+  outline: 2px solid var(--primary-dark);
+  outline-offset: 2px;
+}
+
+/* ---------------- HANDLES ---------------- */
+.resize-handle {
+  width: 8px;
+  height: 8px;
+  background-color: var(--primary-dark);
+  position: absolute;
+  z-index: 10;
+}
+
+.resize-handle.top-left {
+  top: -4px;
+  left: -4px;
+  cursor: nwse-resize;
+}
+
+.resize-handle.top-right {
+  top: -4px;
+  right: -4px;
+  cursor: nesw-resize;
+}
+
+.resize-handle.bottom-left {
+  bottom: -4px;
+  left: -4px;
+  cursor: nesw-resize;
+}
+
+.resize-handle.bottom-right {
+  bottom: -4px;
+  right: -4px;
+  cursor: nwse-resize;
+}
+
+.rotate-handle {
+  width: 12px;
+  height: 12px;
+  background-color: var(--primary-dark);
+  border-radius: 50%;
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: grab;
+}
+
+.rotate-handle::after {
+  content: "";
+  width: 2px;
+  height: 15px;
+  background-color: var(--primary-dark);
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
 }

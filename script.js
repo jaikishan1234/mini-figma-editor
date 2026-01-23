@@ -4,88 +4,88 @@ const addRectBtn = document.querySelector("#addRectBtn");
 const addTextBtn = document.querySelector("#addTextBtn");
 const removeBtn = document.querySelector("#removeBtn");
 
-// Layers panel ke elements - layer ordering ke liye
+// Layers panel ke elements
 const layersList = document.querySelector("#layersList");
 const moveUpBtn = document.querySelector("#moveUpBtn");
 const moveDownBtn = document.querySelector("#moveDownBtn");
 
-// Abhi currently kaunsa element active / selected hai (null = koi bhi nahi)
+// Properties panel ke saare input fields (HTML IDs se match karte hain)
+const propX = document.querySelector("#propX");
+const propY = document.querySelector("#propY");
+const propW = document.querySelector("#propW");
+const propH = document.querySelector("#propH");
+const propRotate = document.querySelector("#propRotate");
+const propColor = document.querySelector("#propColor");
+const propText = document.querySelector("#propText");
+const textOnlyContainer = document.querySelector("#textOnlyProperty");
+
+// Currently selected element (null = koi nahi)
 let selectedElement = null;
 
-// Mouse interactions ke flags - ek time me sirf ek true ho sakta hai
-let isDragging = false; // element ko drag kar rahe hain
-let isResizing = false; // element ka size change kar rahe hain
-let isRotating = false; // element ko rotate kar rahe hain
+// Mouse interaction flags - ek time me sirf ek true
+let isDragging = false;
+let isResizing = false;
+let isRotating = false;
 
-// Resize ke time kaunsa handle (corner) use ho raha hai
-// Possible values: "top-left", "top-right", "bottom-left", "bottom-right"
+// Resize ke time kaunsa corner handle use ho raha hai
 let currentHandle = null;
 
-// Drag ke liye: mouse aur element ke top-left corner ke beech ka distance
-// Isse element mouse ke neeche jump nahi karta
+// Drag ke liye mouse aur element ke beech ka offset
 let offsetX = 0;
 let offsetY = 0;
 
-// Resize start ke time element aur mouse ki state save karte hain
-// Taaki live resize calculate kar sakein
-let startMouseX = 0; // resize start pe mouse X position
-let startMouseY = 0; // resize start pe mouse Y position
-let startWidth = 0; // resize start pe element ki width
-let startHeight = 0; // resize start pe element ki height
-let startLeft = 0; // resize start pe element ka left position
-let startTop = 0; // resize start pe element ka top position
+// Resize start ke time ka snapshot
+let startMouseX = 0;
+let startMouseY = 0;
+let startWidth = 0;
+let startHeight = 0;
+let startLeft = 0;
+let startTop = 0;
 
-// Rotation ke liye angle tracking
-let startAngle = 0; // rotation start ke time mouse ka angle
-let currentRotation = 0; // element ka current rotation in degrees
+// Rotation tracking variables
+let startAngle = 0;
+let currentRotation = 0;
 
-// Har element ko ek unique id dene ke liye counter
-// element-1, element-2, element-3... aise IDs milti hain
+// Unique ID counter (element-1, element-2, etc.)
 let elementCounter = 0;
 
-// Minimum size taaki resize karte time element gayab na ho
-// 20px se chhota element user ko dikhai nahi dega
+// Minimum size taaki element invisible na ho
 const MIN_SIZE = 20;
 
-// Layers ka internal order store karne ke liye array
-// Index 0 = bottom-most layer (sabse neeche)
-// Index last = top-most layer (sabse upar)
+// Layers array: index 0 = bottom, last = top
 let layers = [];
 
-/*
-  addControls() - Jab koi element select hota hai
-  tab uske around resize aur rotate ke controls add karte hain
-  
-  Ye function 5 handles create karta hai:
-  - 4 corners me resize handles (blue squares)
-  - 1 top-center me rotate handle (orange circle)
-*/
+// RGB string ko hex format me convert karta hai (e.g., "rgb(255, 0, 0)" → "#ff0000")
+function rgbToHex(rgb) {
+  const nums = rgb.match(/\d+/g); // saare numbers extract karo
+  if (!nums) return "#000000"; // agar nahi mila to black return karo
+  return (
+    "#" +
+    nums.map((n) => parseInt(n).toString(16).padStart(2, "0")).join("")
+  );
+}
+
+// Selected element ke around resize aur rotate handles add karta hai
 function addControls(element) {
-  // 4 corners ke resize handles ek loop me create kar rahe hain
+  // 4 corners ke resize handles
   const positions = ["top-left", "top-right", "bottom-left", "bottom-right"];
 
   positions.forEach((pos) => {
-    // Har corner ke liye ek chhota blue square div banate hain
     const handle = document.createElement("div");
     handle.classList.add("resize-handle", pos);
 
-    // Resize handle par mouse down = resize mode start
+    // Resize handle pe mouse down = resize mode start
     handle.addEventListener("mousedown", (e) => {
-      // stopPropagation = parent element (main element) ka drag event trigger nahi hoga
-      e.stopPropagation();
-      // preventDefault = browser ka default behavior (text select etc) nahi hoga
+      e.stopPropagation(); // parent element ka event block karo
       e.preventDefault();
 
-      // Sabse pehle saare flags reset karke sirf resize mode ON
       isResizing = true;
       isDragging = false;
       isRotating = false;
 
-      // Kaunsa corner pakda hai wo save kar lo
-      currentHandle = pos;
+      currentHandle = pos; // kaunsa corner pakda hai
 
-      // Resize start ke time initial values store karo
-      // Baad me mouse move pe inhi se comparison karke new size calculate karenge
+      // Start position aur size store karo
       startMouseX = e.clientX;
       startMouseY = e.clientY;
       startWidth = element.offsetWidth;
@@ -94,12 +94,10 @@ function addControls(element) {
       startTop = element.offsetTop;
     });
 
-    // Ye handle element ke andar as a child add ho jata hai
     element.appendChild(handle);
   });
 
-  // Rotate handle element ke top-center pe add hota hai
-  // Ye orange color ka circle hota hai
+  // Rotate handle top-center pe
   const rotateHandle = document.createElement("div");
   rotateHandle.classList.add("rotate-handle");
 
@@ -107,470 +105,371 @@ function addControls(element) {
     e.stopPropagation();
     e.preventDefault();
 
-    // Saare flags reset karke sirf rotation mode ON
     isRotating = true;
     isDragging = false;
     isResizing = false;
 
-    // Element ke center se mouse ka angle calculate karte hain
-    // Ye trigonometry use karta hai (atan2 = angle between two points)
+    // Element ke center se mouse ka angle nikalo
     const rect = element.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2; // element ka horizontal center
-    const centerY = rect.top + rect.height / 2; // element ka vertical center
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
 
-    // Math.atan2() radians me angle deta hai
-    const radians = Math.atan2(
-      e.clientY - centerY, // Y distance
-      e.clientX - centerX, // X distance
-    );
+    const radians = Math.atan2(e.clientY - cy, e.clientX - cx);
+    startAngle = radians * (180 / Math.PI); // radians → degrees
 
-    // Radians ko degrees me convert karo (humans ke liye easy)
-    // Formula: degrees = radians × (180 / π)
-    startAngle = radians * (180 / Math.PI);
-
-    // Agar element pehle se rotated hai to wo angle bhi save karo
-    // dataset.rotation me hum custom data store karte hain
     currentRotation = parseFloat(element.dataset.rotation || 0);
   });
 
-  // Rotate handle bhi element ke andar add ho jata hai
   element.appendChild(rotateHandle);
 }
 
-/*
-  removeControls() - Jab element deselect hota hai
-  tab saare controls (resize + rotate handles) hata dete hain
-  
-  Ye function querySelectorAll se saare handles dhundh ke unhe remove karta hai
-*/
+// Saare control handles remove karta hai
 function removeControls(element) {
   element
-    .querySelectorAll(".resize-handle, .rotate-handle") // dono types ke handles select karo
-    .forEach((h) => h.remove()); // har ek ko DOM se remove kardo
+    .querySelectorAll(".resize-handle, .rotate-handle")
+    .forEach((h) => h.remove());
 }
 
-/*
-  selectElement() - Element select karne ka common function
-  
-  Ye function 5 kaam karta hai:
-  1. Purana element deselect (agar koi tha)
-  2. Naya element highlight
-  3. Rotation restore (agar pehle se rotated tha)
-  4. Control handles add
-  5. Layers panel update
-*/
+// Element select karne ka main function
 function selectElement(element) {
-  // Agar pehle se koi element selected tha to usko deselect karo
+  // Purana element deselect karo
   if (selectedElement) {
-    selectedElement.classList.remove("selected"); // yellow border hatao
-    removeControls(selectedElement); // handles hatao
+    selectedElement.classList.remove("selected");
+    removeControls(selectedElement);
   }
 
-  // Naye element ko selected bana do
+  // Naya element select karo
   selectedElement = element;
-  selectedElement.classList.add("selected"); // yellow border add karo
+  selectedElement.classList.add("selected");
 
-  // Rotation handling: agar pehle rotation set nahi hai toh default 0
-  // dataset me custom attributes store karte hain (HTML5 feature)
+  // Rotation restore karo
   if (!selectedElement.dataset.rotation) {
     selectedElement.dataset.rotation = 0;
   }
 
-  // Saved rotation ko CSS transform me apply karo
-  // Ye ensure karta hai ki element apne rotation me rehta hai
   selectedElement.style.transform = `rotate(${selectedElement.dataset.rotation}deg)`;
 
-  // Control handles add karo (resize + rotate)
   addControls(selectedElement);
-
-  // Layers panel me active state update karo
-  // Taaki user ko dikh sake ki kaunsa element selected hai
-  renderLayersPanel();
+  renderLayersPanel(); // layers panel update
+  updatePropertiesPanel(); // properties panel update
 }
 
-/*
-  createBaseElement() - Rectangle aur Text dono ke liye common base creator
-  
-  Parameters:
-  - type: "rectangle" ya "text"
-  - width: element ki width in pixels
-  - height: element ki height in pixels
-  
-  Return: fully configured DOM element (abhi canvas me add nahi hua)
-*/
+// Properties panel ko selected element ke values se populate karta hai
+function updatePropertiesPanel() {
+  if (!selectedElement) return;
+
+  // Position aur size values set karo
+  propX.value = parseInt(selectedElement.style.left) || 0;
+  propY.value = parseInt(selectedElement.style.top) || 0;
+  propW.value = parseInt(selectedElement.style.width) || 0;
+  propH.value = parseInt(selectedElement.style.height) || 0;
+  propRotate.value = parseFloat(selectedElement.dataset.rotation || 0);
+
+  // Background color ko hex me convert karke set karo
+  propColor.value = rgbToHex(
+    getComputedStyle(selectedElement).backgroundColor
+  );
+
+  // Text box ke liye text content field show/hide
+  if (selectedElement.dataset.type === "text") {
+    textOnlyContainer.style.display = "block";
+    propText.value = selectedElement.textContent;
+  } else {
+    textOnlyContainer.style.display = "none";
+  }
+}
+
+// Rectangle aur Text dono ke liye base element creator
 function createBaseElement(type, width, height) {
-  // Naya div element create karo
   const el = document.createElement("div");
 
-  // Unique ID assign karo (element-1, element-2, etc.)
+  // Unique ID assign
   elementCounter++;
   el.id = `element-${elementCounter}`;
-
-  // Type dataset me store karo (baad me zaroorat pad sakti hai)
   el.dataset.type = type;
 
-  // Canvas ke andar random position calculate karo
-  // Math.random() = 0 se 1 ke beech random decimal
-  // Isko multiply karke humein canvas ke andar ka random position milta hai
-  const maxX = canvas.clientWidth - width; // max left position (taaki element canvas se bahar na jaye)
-  const maxY = canvas.clientHeight - height; // max top position
+  // Canvas ke andar random position
+  const maxX = canvas.clientWidth - width;
+  const maxY = canvas.clientHeight - height;
 
   el.style.left = `${Math.random() * maxX}px`;
   el.style.top = `${Math.random() * maxY}px`;
   el.style.width = `${width}px`;
   el.style.height = `${height}px`;
 
-  // Mouse down par element select + drag start
+  // Mouse down = select + drag start
   el.addEventListener("mousedown", (e) => {
-    // Agar resize/rotate chal raha hai ya handle pe click hai to drag start mat karo
-    // Ye important check hai - warna handle drag ho jayega instead of resize/rotate
+    // Handle pe click hai to drag start mat karo
     if (
       isResizing ||
       isRotating ||
       e.target.classList.contains("resize-handle") ||
       e.target.classList.contains("rotate-handle")
     )
-      return; // early return = baaki code skip ho jayega
+      return;
 
-    // Parent (canvas) ka event trigger nahi hona chahiye
     e.stopPropagation();
 
-    // Is element ko select karo
     selectElement(el);
 
-    // Drag mode ON
     isDragging = true;
 
-    // Mouse aur element ke corner ke beech ka offset calculate karo
-    // Isse element exactly wahin pakda jayega jahan user ne click kiya
-    const rect = el.getBoundingClientRect(); // screen pe element ki exact position
-    offsetX = e.clientX - rect.left; // mouse X - element left = X offset
-    offsetY = e.clientY - rect.top; // mouse Y - element top = Y offset
+    // Mouse offset calculate (taaki element jump na kare)
+    const rect = el.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
   });
 
-  return el; // configured element return karo
+  return el;
 }
 
-/*
-  renderLayersPanel() - Layers panel ko current layers array ke basis par render karte hain
-  
-  UI me top-most element sabse upar dikhana hota hai
-  Lekin layers array me last element = top-most hai
-  Isliye reverse() use karte hain
-*/
+// Layers panel render karta hai (top layer upar dikhta hai)
 function renderLayersPanel() {
-  // Pehle pura panel khali karo
   layersList.innerHTML = "";
 
-  // Layers array ko reverse karke loop (top → bottom order me UI me dikhega)
-  // Spread operator [...] se copy banate hain taaki original array change na ho
+  // Array reverse karke loop (UI me top → bottom order)
   [...layers].reverse().forEach((el) => {
-    // Har layer ke liye ek list item div create karo
     const item = document.createElement("div");
     item.className = "layer-item";
-    item.textContent = el.id; // element ki ID show karo (element-1, element-2, etc.)
+    item.textContent = el.id;
 
-    // Agar ye element currently selected hai to special style do
+    // Selected element ko highlight karo
     if (el === selectedElement) {
-      item.classList.add("active"); // blue background + white text
+      item.classList.add("active");
     }
 
-    // Layer name par click karne se canvas me wo element select ho jaye
+    // Layer name pe click = element select
     item.onclick = () => selectElement(el);
 
-    // Is item ko layers list me add karo
     layersList.appendChild(item);
   });
 }
 
-/*
-  syncDOMOrder() - DOM order ko layers array ke order ke saath sync karte hain
-  
-  Isse z-index aur stacking consistent rehta hai
-  appendChild() existing element ko move kar deta hai (duplicate nahi banata)
-*/
+// DOM order ko layers array ke saath sync karta hai
 function syncDOMOrder() {
-  // Layers array ke order me sab elements ko canvas me re-append karo
-  // Browser automatically sahi stacking order bana deta hai
   layers.forEach((el) => canvas.appendChild(el));
 }
 
-/*
-  updateZIndexes() - Extra safety ke liye z-index explicitly set kar dete hain
-  
-  Normally DOM order hi kaafi hai, but z-index bhi set karne se guarantee milti hai
-  Index 0 = z-index 1 (bottom)
-  Index 1 = z-index 2
-  Index 2 = z-index 3 (top)
-*/
+// Z-index explicitly set karta hai (safety)
 function updateZIndexes() {
   layers.forEach((el, i) => {
-    el.style.zIndex = i + 1; // +1 isliye taaki 0 se start na ho
+    el.style.zIndex = i + 1; // index 0 = z-index 1, etc.
   });
 }
 
-/*
-  addRectBtn - Rectangle add karne ka button handler
-  Click pe:
-  1. Base element create
-  2. "rect" class add (CSS styling ke liye)
-  3. Canvas me append
-  4. Layers array me push (top-most layer ban jayega)
-  5. Z-index aur DOM sync
-  6. Layers panel update
-*/
+// Rectangle add button
 addRectBtn.onclick = () => {
-  // 80x80 size ka rectangle create karo
   const r = createBaseElement("rectangle", 80, 80);
-  r.classList.add("rect"); // CSS me .rect class se pink background milta hai
-  canvas.appendChild(r); // canvas me dikhao
+  r.classList.add("rect");
+  canvas.appendChild(r);
 
-  // Layers system me register karo
-  layers.push(r); // array ke end me = top-most layer
+  // Layers system me register
+  layers.push(r); // top-most layer ban jayega
   updateZIndexes();
   syncDOMOrder();
   renderLayersPanel();
 };
 
-/*
-  addTextBtn - Text box add karne ka button handler
-  Similar to rectangle but different size aur default text ke saath
-*/
+// Text box add button
 addTextBtn.onclick = () => {
-  // 120x40 size ka text box create karo (wider for text)
   const t = createBaseElement("text", 120, 40);
-  t.classList.add("text-box"); // CSS me .text-box class se blue background + center text
-  t.textContent = "Text Box"; // default text
+  t.classList.add("text-box");
+  t.textContent = "Text Box";
   canvas.appendChild(t);
 
-  // Layers system me register karo
-  layers.push(t); // array ke end me = top-most layer
+  // Layers system me register
+  layers.push(t);
   updateZIndexes();
   syncDOMOrder();
   renderLayersPanel();
 };
 
-/*
-  Global mousemove event - Yahin drag, resize, rotate sab handle hota hai
-  Ye constantly trigger hota hai jab mouse move hota hai
-  
-  Checks:
-  1. Agar koi element selected nahi to kuch mat karo
-  2. Agar rotating hai to rotation logic chala do
-  3. Agar resizing hai to resize logic chala do
-  4. Agar dragging hai to drag logic chala do
-*/
-document.addEventListener("mousemove", (e) => {
-  // Agar koi element selected hi nahi to kuch karne ki zaroorat nahi
+// Selected element delete karta hai
+removeBtn.onclick = () => {
   if (!selectedElement) return;
 
-  // Canvas ki screen position nikalo (boundaries check ke liye)
+  // Layers array se remove
+  layers = layers.filter((el) => el !== selectedElement);
+  removeControls(selectedElement);
+  selectedElement.remove(); // DOM se delete
+  selectedElement = null;
+
+  updateZIndexes();
+  syncDOMOrder();
+  renderLayersPanel();
+};
+
+// Global mousemove - drag/resize/rotate yahin handle hota hai
+document.addEventListener("mousemove", (e) => {
+  if (!selectedElement) return;
+
   const canvasRect = canvas.getBoundingClientRect();
 
-  // ROTATION LOGIC 
+  // Rotation logic
   if (isRotating) {
-    // Element ka current bounding box nikalo
     const rect = selectedElement.getBoundingClientRect();
-
-    // Element ka center point calculate karo
     const cx = rect.left + rect.width / 2; // center X
     const cy = rect.top + rect.height / 2; // center Y
 
-    // Mouse aur center ke beech ka current angle nikalo
-    // atan2() automatically quadrant handle karta hai (all 4 directions)
+    // Current angle calculate
     const radians = Math.atan2(e.clientY - cy, e.clientX - cx);
-    const angle = radians * (180 / Math.PI); // degrees me convert
+    const angle = radians * (180 / Math.PI);
 
-    // Final angle = purana rotation + (naya angle - start angle)
-    // Ye formula ensure karta hai ki rotation smooth rahe
+    // Final angle = old rotation + delta
     const finalAngle = currentRotation + (angle - startAngle);
 
-    // Element ko rotate karo
     selectedElement.style.transform = `rotate(${finalAngle}deg)`;
-
-    // Naya rotation dataset me save karo (taaki deselect/reselect ke baad bhi rahe)
     selectedElement.dataset.rotation = finalAngle;
 
-    return; // rotation complete, baaki logic skip karo
+    updatePropertiesPanel(); // properties panel sync
+    return;
   }
 
-  // RESIZE LOGIC 
+  // Resize logic
   if (isResizing) {
-    // Mouse ne kitna move kiya start position se (delta = change)
     const dx = e.clientX - startMouseX; // X me kitna move
     const dy = e.clientY - startMouseY; // Y me kitna move
 
-    // Start values se new values calculate karenge
-    let newWidth = startWidth;
-    let newHeight = startHeight;
-    let newLeft = startLeft;
-    let newTop = startTop;
+    let newW = startWidth;
+    let newH = startHeight;
+    let newL = startLeft;
+    let newT = startTop;
 
-    // Kaunsa handle use ho raha hai uske basis par calculation change hota hai
-
+    // Handle ke basis par calculation
     if (currentHandle === "bottom-right") {
-      // Bottom-right: sirf size badhta hai, position same rehta hai
-      newWidth += dx; // width me mouse ka X change add karo
-      newHeight += dy; // height me mouse ka Y change add karo
+      newW += dx;
+      newH += dy;
     } else if (currentHandle === "bottom-left") {
-      // Bottom-left: width + left dono change, height badhta hai
-      newWidth -= dx; // width decrease (left move = width kam)
-      newLeft += dx; // left position shift (width kam hone pe left ko adjust)
-      newHeight += dy; // height increase
+      newW -= dx;
+      newL += dx;
+      newH += dy;
     } else if (currentHandle === "top-right") {
-      // Top-right: width + top dono change, height badhta hai
-      newWidth += dx; // width increase
-      newHeight -= dy; // height decrease (top move = height kam)
-      newTop += dy; // top position shift
+      newW += dx;
+      newH -= dy;
+      newT += dy;
     } else if (currentHandle === "top-left") {
-      // Top-left: sab kuch change hota hai
-      newWidth -= dx; // width decrease
-      newLeft += dx; // left adjust
-      newHeight -= dy; // height decrease
-      newTop += dy; // top adjust
+      newW -= dx;
+      newL += dx;
+      newH -= dy;
+      newT += dy;
     }
 
-    // Minimum size check: element 20px se chhota nahi hona chahiye
-    // Math.max() = do values me se badi wali return karta hai
-    newWidth = Math.max(newWidth, MIN_SIZE);
-    newHeight = Math.max(newHeight, MIN_SIZE);
+    // Minimum size maintain
+    newW = Math.max(newW, MIN_SIZE);
+    newH = Math.max(newH, MIN_SIZE);
 
-    // Calculated values element ko apply karo
-    selectedElement.style.width = `${newWidth}px`;
-    selectedElement.style.height = `${newHeight}px`;
-    selectedElement.style.left = `${newLeft}px`;
-    selectedElement.style.top = `${newTop}px`;
+    selectedElement.style.width = `${newW}px`;
+    selectedElement.style.height = `${newH}px`;
+    selectedElement.style.left = `${newL}px`;
+    selectedElement.style.top = `${newT}px`;
 
-    return; // resize complete, baaki logic skip karo
+    updatePropertiesPanel();
+    return;
   }
 
-  // DRAG LOGIC 
+  // Drag logic
   if (isDragging) {
-    // Mouse ki current position - canvas ka left/top = canvas ke andar ka position
-    // Phir offset minus karo taaki element exactly wahi pakda rahe jahan click kiya tha
     const newLeft = e.clientX - canvasRect.left - offsetX;
     const newTop = e.clientY - canvasRect.top - offsetY;
 
-    // Position apply karo (koi boundary check nahi - element canvas se bahar ja sakta hai)
     selectedElement.style.left = `${newLeft}px`;
     selectedElement.style.top = `${newTop}px`;
+
+    updatePropertiesPanel();
   }
 });
 
-/*
-  Global mouseup event - Mouse chhodte hi saare interaction modes reset
-  
-  Ye zaruri hai warna drag/resize/rotate continue ho jayega
-  even agar mouse canvas se bahar chala jaye
-*/
+// Mouse chhodte hi saare modes reset
 document.addEventListener("mouseup", () => {
-  // Saare flags false kar do
   isDragging = false;
   isResizing = false;
   isRotating = false;
-  currentHandle = null; // koi handle active nahi
+  currentHandle = null;
 });
 
-/*
-  Canvas par click (empty area pe) karne par element deselect ho jaye
-  
-  e.target === canvas check karta hai ki exactly canvas pe click hua
-  (kisi element pe nahi)
-*/
+// Canvas pe click = deselect
 canvas.onclick = (e) => {
-  // Agar canvas pe hi click hua (element pe nahi) aur koi element selected tha
   if (e.target === canvas && selectedElement) {
-    // Element deselect karo
-    selectedElement.classList.remove("selected"); // yellow border hatao
-    removeControls(selectedElement); // handles hatao
-    selectedElement = null; // selection clear karo
-    renderLayersPanel(); // layers panel update (active state hata do)
+    selectedElement.classList.remove("selected");
+    removeControls(selectedElement);
+    selectedElement = null;
+    renderLayersPanel();
+
+    // Properties panel clear karo
+    propX.value = "";
+    propY.value = "";
+    propW.value = "";
+    propH.value = "";
+    propRotate.value = "";
+    propColor.value = "#000000";
+    propText.value = "";
   }
 };
 
-/*
-  removeBtn - Selected element ko delete karta hai
-  
-  Steps:
-  1. Layers array se remove
-  2. Controls remove
-  3. DOM se remove
-  4. Selection clear
-  5. Sab sync karo
-*/
-removeBtn.onclick = () => {
-  // Agar koi element selected hi nahi to kuch mat karo
+// Properties panel se element update karne ke handlers (live sync)
+
+propX.oninput = () => {
   if (!selectedElement) return;
-
-  // Layers array se is element ko filter karke nikal do
-  // filter() = condition match karne wale elements ko rakho, baaki hata do
-  layers = layers.filter((el) => el !== selectedElement);
-
-  // Handles hata do
-  removeControls(selectedElement);
-
-  // DOM se permanently delete karo
-  selectedElement.remove();
-
-  // Selection clear karo
-  selectedElement = null;
-
-  // Layers system sync karo
-  updateZIndexes(); // z-index recalculate
-  syncDOMOrder(); // DOM order fix
-  renderLayersPanel(); // UI update
+  selectedElement.style.left = `${propX.value}px`;
 };
 
-/*
-  moveUpBtn - Element ko stacking me aage lana (z-index badhana)
-  
-  Important concept:
-  - layers[0] = bottom-most (sabse neeche)
-  - layers[last] = top-most (sabse upar)
-  
-  Move UP = array me aage (higher index) shift karna
-*/
+propY.oninput = () => {
+  if (!selectedElement) return;
+  selectedElement.style.top = `${propY.value}px`;
+};
+
+propW.oninput = () => {
+  if (!selectedElement) return;
+  selectedElement.style.width = `${Math.max(propW.value, MIN_SIZE)}px`;
+};
+
+propH.oninput = () => {
+  if (!selectedElement) return;
+  selectedElement.style.height = `${Math.max(propH.value, MIN_SIZE)}px`;
+};
+
+propRotate.oninput = () => {
+  if (!selectedElement) return;
+  selectedElement.dataset.rotation = propRotate.value;
+  selectedElement.style.transform = `rotate(${propRotate.value}deg)`;
+};
+
+propColor.oninput = () => {
+  if (!selectedElement) return;
+  selectedElement.style.backgroundColor = propColor.value;
+};
+
+propText.oninput = () => {
+  if (!selectedElement) return;
+  if (selectedElement.dataset.type === "text") {
+    selectedElement.textContent = propText.value;
+  }
+};
+
+// Move Up = stacking me aage (higher z-index)
 moveUpBtn.onclick = () => {
-  // Agar koi element selected nahi to kuch mat karo
   if (!selectedElement) return;
 
-  // Selected element ka current index dhundo
-  const index = layers.indexOf(selectedElement);
-
-  // Agar element already top-most hai (last index pe) to move nahi kar sakte
-  if (index < layers.length - 1) {
-    // Current element aur next element ki position swap karo
-    // Destructuring assignment se ek line me swap ho jata hai
-    // Pehle: [A, B] → Baad: [B, A]
-    [layers[index], layers[index + 1]] = [layers[index + 1], layers[index]];
-
-    // Changes apply karo
-    updateZIndexes(); // z-index recalculate (higher index = higher z-index)
-    syncDOMOrder(); // DOM order match karao array se
-    renderLayersPanel(); // UI me layers list update karo
+  const i = layers.indexOf(selectedElement);
+  if (i < layers.length - 1) {
+    // Next element ke saath swap
+    [layers[i], layers[i + 1]] = [layers[i + 1], layers[i]];
+    updateZIndexes();
+    syncDOMOrder();
+    renderLayersPanel();
   }
 };
 
-/*
-  moveDownBtn - Element ko stacking me peeche bhejna (z-index ghatana)
-  
-  Move DOWN = array me peeche (lower index) shift karna
-*/
+// Move Down = stacking me peeche (lower z-index)
 moveDownBtn.onclick = () => {
-  // Agar koi element selected nahi to kuch mat karo
   if (!selectedElement) return;
 
-  // Selected element ka current index dhundo
-  const index = layers.indexOf(selectedElement);
-
-  // Agar element already bottom-most hai (index 0 pe) to move nahi kar sakte
-  if (index > 0) {
-    // Current element aur previous element ki position swap karo
-    [layers[index], layers[index - 1]] = [layers[index - 1], layers[index]];
-
-    // Changes apply karo
-    updateZIndexes(); // z-index recalculate (lower index = lower z-index)
-    syncDOMOrder(); // DOM order match karao
-    renderLayersPanel(); // UI update
+  const i = layers.indexOf(selectedElement);
+  if (i > 0) {
+    // Previous element ke saath swap
+    [layers[i], layers[i - 1]] = [layers[i - 1], layers[i]];
+    updateZIndexes();
+    syncDOMOrder();
+    renderLayersPanel();
   }
 };
