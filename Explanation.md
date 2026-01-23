@@ -1,10 +1,10 @@
 # Figma-Style Visual Editor (Foundation Version)
 
-## Project Status: Section 5 Complete
-This project is a web-based visual design tool built from scratch using Vanilla JavaScript. As of this milestone, the core engine—including **Element Creation, Selection, Transformations, Advanced Layer Management, and Live Properties Panel (Sections 1-5)**—is fully implemented and documented with detailed Hinglish commentary.
+## Project Status: Section 6 Complete
+This project is a web-based visual design tool built from scratch using Vanilla JavaScript. As of this milestone, the core engine—including **Element Creation, Selection, Transformations, Advanced Layer Management, Live Properties Panel, and Keyboard Interactions (Sections 1-6)**—is fully implemented and documented with detailed Hinglish commentary.
 
 ## Project Goal
-The objective is to build a basic visual design editor similar in spirit to Figma, implemented entirely using standard DOM elements. This project demonstrates mastery over DOM manipulation, coordinate geometry, state management, and two-way data binding without the use of external frameworks, Canvas, or SVG engines.
+The objective is to build a basic visual design editor similar in spirit to Figma, implemented entirely using standard DOM elements. This project demonstrates mastery over DOM manipulation, coordinate geometry, state management, two-way data binding, and keyboard-driven workflows without the use of external frameworks, Canvas, or SVG engines.
 
 ---
 
@@ -80,6 +80,36 @@ The panel implements bidirectional data flow between UI inputs and canvas elemen
 * **Type-Specific Fields**: The text content input container is shown/hidden dynamically based on the selected element's `data-type` attribute.
 * **Deselection Behavior**: When no element is selected (canvas click), all input fields are cleared and reset to default values.
 
+### 6. Keyboard Interactions (Power User Features)
+A global keyboard event listener enables professional-grade shortcuts for faster workflows:
+
+#### Deletion Shortcuts
+* **Delete Key**: Removes the currently selected element from the canvas.
+* **Backspace Key**: Alternative deletion shortcut (browser back navigation is prevented).
+* **Automatic Cleanup**: Upon deletion, the element is removed from the layers array, DOM, and all panels are synchronized.
+* **State Reset**: Selection is cleared and control handles are removed automatically.
+
+#### Arrow Key Nudging
+* **Precision Movement**: Arrow keys move the selected element by 5 pixels per keypress.
+* **Directional Control**:
+    * **ArrowLeft**: Moves element 5px to the left.
+    * **ArrowRight**: Moves element 5px to the right.
+    * **ArrowUp**: Moves element 5px upward.
+    * **ArrowDown**: Moves element 5px downward.
+
+#### Boundary Clamping System
+* **Canvas Containment**: A `clamp()` utility function ensures elements never escape the canvas boundaries.
+* **Mathematical Constraint**: Uses `Math.max()` and `Math.min()` to enforce position limits:
+    * Minimum X/Y position: `0`
+    * Maximum X position: `canvas.clientWidth - element.offsetWidth`
+    * Maximum Y position: `canvas.clientHeight - element.offsetHeight`
+* **Real-Time Validation**: Position is clamped after every arrow key movement before applying to the element.
+
+#### Keyboard Event Handling
+* **Selection Guard**: All keyboard shortcuts only work when an element is selected.
+* **Event Prevention**: `preventDefault()` stops default browser behavior (page scrolling, back navigation).
+* **Properties Sync**: After any keyboard-driven movement or deletion, the Properties Panel is updated to reflect changes.
+
 ---
 
 ## Technical Methodology: The Snapshot Approach
@@ -88,17 +118,26 @@ To maintain stability and prevent glitches, the system captures state "Snapshots
 2. **Mousemove (Delta Calculation)**: Calculates the change (Delta) between current mouse position and the captured snapshot to apply updates.
 3. **Mouseup (Commit)**: Resets all interaction flags to prevent accidental movements.
 4. **Properties Sync (Reflection)**: After any transformation, the Properties Panel is updated to reflect new values, maintaining consistency across the interface.
+5. **Keyboard Events (Direct Manipulation)**: Keyboard shortcuts directly modify element positions with boundary validation, ensuring safe operations.
 
 ---
 
 ## Roadmap (Remaining Sections)
-* **Section 6**: Keyboard Interactions (Delete key, Arrow key nudging, Copy/Paste).
-* **Section 7**: Persistence via localStorage (Auto-save and restore projects).
-* **Section 8**: Export functionality (JSON data export, HTML/CSS code generation).
+* **Section 7**: Persistence via localStorage (Auto-save, restore projects, version management).
+* **Section 8**: Export functionality (JSON data export, HTML/CSS code generation, clipboard copy).
 
 ---
 
 ### How to Run
 1. Clone the repository.
 2. Open `index.html` in any modern browser.
-3. Use the top controls to add elements, the Layers Panel to manage stacking order, and the Properties Panel to fine-tune element attributes.
+3. Use the top controls to add elements, the Layers Panel to manage stacking order, the Properties Panel to fine-tune element attributes, and keyboard shortcuts for efficient editing.
+
+---
+
+### Keyboard Shortcuts Reference
+| Shortcut | Action |
+|----------|--------|
+| `Delete` / `Backspace` | Delete selected element |
+| `Arrow Keys` | Move element 5px in direction |
+
