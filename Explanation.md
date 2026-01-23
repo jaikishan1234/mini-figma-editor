@@ -1,10 +1,10 @@
 # Figma-Style Visual Editor (Foundation Version)
 
-## Project Status: Section 3 Complete
-This project is a web-based visual design tool built from scratch using Vanilla JavaScript. As of this commit, the core engine—including **Element Creation, Selection, Dragging, Resizing, and Rotation (Sections 1-3)**—is fully implemented and stable.
+## Project Status: Section 4 Complete
+This project is a web-based visual design tool built from scratch using Vanilla JavaScript. As of this milestone, the core engine—including **Element Creation, Selection, Transformations, and Advanced Layer Management (Sections 1-4)**—is fully implemented and documented with detailed Hinglish commentary.
 
 ## Project Goal
-The objective is to build a basic visual design editor similar in spirit to Figma, implemented entirely using standard DOM elements. This project demonstrates a strong command of DOM manipulation, coordinate geometry, and state management without the use of external frameworks, Canvas, or SVG engines.
+The objective is to build a basic visual design editor similar in spirit to Figma, implemented entirely using standard DOM elements. This project demonstrates mastery over DOM manipulation, coordinate geometry, and state management without the use of external frameworks, Canvas, or SVG engines.
 
 ---
 
@@ -12,54 +12,52 @@ The objective is to build a basic visual design editor similar in spirit to Figm
 
 ### 1. Element Creation & Identification
 The system allows for the dynamic generation of design objects:
-* **Element Types**: Users can create Rectangles and Text Boxes.
-* **DOM Representation**: Every object is a `<div>` element assigned a unique ID via a global counter.
-* **Metadata**: Essential data like the element type and its rotation angle are stored directly on the node using dataset attributes.
-* **Initial Placement**: Elements spawn with default dimensions at random coordinates within the canvas to prevent immediate overlapping.
+* **Element Types**: Supports Rectangles and Text Boxes.
+* **DOM Representation**: Every object is a `<div>` element assigned a unique ID via a global counter (e.g., `element-1`).
+* **Metadata**: Essential data like the element type and current rotation angle are stored directly on the node using HTML5 dataset attributes.
+* **Randomized Spawning**: Elements appear at random coordinates within the canvas boundaries to prevent immediate overlapping.
 
 ### 2. Selection & Control Management
 The editor follows a centralized selection logic to maintain a clean workspace:
-* **Visual Selection**: Clicking an element selects it, adding a high-contrast outline to indicate it is active.
-* **Dynamic Control Injection**: Upon selection, 4 corner resize handles and a circular rotation handle are injected into the DOM for that specific element.
-* **Deselection**: Clicking the empty canvas clears the global state and removes all interactive handles.
+* **Visual Selection**: Clicking an element applies a "selected" class, which adds a visual highlight (e.g., yellow border).
+* **Dynamic Control Injection**: Upon selection, 4 blue corner resize handles and 1 orange circular rotation handle are injected into the DOM.
+* **Automatic Cleanup**: Deselection via clicking the empty canvas clears the global state and removes all interactive handles from the DOM.
 
 ### 3. Transformation Engine
-This is the "brain" of the editor, handling all physical modifications of the objects.
+This engine handles all physical modifications of the objects using mouse events and coordinate math.
 
 #### Dragging Mechanics
-* **Mouse Interaction**: Elements are draggable using a standard "grab-and-move" approach using mouse events.
-* **Offset Calculation**: To prevent the element from "jumping" to the cursor, we calculate the gap between the mouse click and the element's top-left corner.
-* **Boundary Constraints**: Elements are strictly clamped within the canvas width and height.
+* **Grab-and-Move**: Elements are draggable using mousedown, mousemove, and mouseup events.
+* **Offset Calculation**: An offset is calculated based on the click position relative to the element's bounding rect to prevent "jumping" during drag.
 
 #### Coordinate-Based Resizing
-* **Corner Anchoring**: Resizing is restricted to the four corner handles.
-* **Real-time Scaling**: Width and height update dynamically by calculating the "Delta" (difference) from the initial mouse-down position.
-* **Safety Limits**: A minimum size constraint is enforced so that elements never disappear or invert.
+* **Handle-Specific Logic**: Resizing behavior changes depending on the grabbed corner (e.g., Top-Left adjusts width, height, left, and top; Bottom-Right adjusts width and height).
+* **Minimum Size Constraint**: A `MIN_SIZE` of 20px is enforced to ensure elements remain visible and interactive.
 
 #### Geometry-Driven Rotation
-* **Figma-Style Interaction**: Instead of keyboard shortcuts, a visual handle allows for intuitive rotation based on mouse events.
-* **Math (atan2)**: The script calculates the angle between the element’s visual center and the current mouse cursor position using trigonometry.
-* **State Preservation**: The rotation angle is preserved in the element's metadata, ensuring that the next rotation session starts from the previous angle.
+* **Trigonometric Calculation**: The system uses `Math.atan2()` to calculate the angle between the element’s center and the mouse cursor.
+* **Persistence**: Rotation values are stored in `dataset.rotation` and applied via CSS `transform: rotate()`, ensuring the state is preserved even after deselection.
+
+### 4. Advanced Layer Management
+A dedicated Layers Panel provides a vertical overview of the project structure:
+* **Reversed UI Order**: To match design tool standards, the topmost element in the DOM (last in the layers array) is displayed at the top of the UI list.
+* **Selection Sync**: Clicking a layer item in the panel automatically selects the corresponding element on the canvas.
+* **Stacking Logic**:
+    * **Move Up**: Swaps the selected element with the next one in the array, bringing it forward in the visual stack.
+    * **Move Down**: Swaps with the previous element in the array, sending it backward.
+* **DOM & Z-Index Sync**: After any reorder, the system re-appends elements to the canvas using `appendChild` and recalculates `zIndex` to ensure visual and structural consistency.
 
 ---
 
-## The "Snapshot" Methodology
-For maximum stability and to avoid glitches, this project uses a **Snapshot Method**:
-1. **Mousedown (The Capture)**: When a user clicks a handle, the script takes a "photo" of the current state including Initial Left, Top, Width, Height, and Angle.
-2. **Mousemove (The Calculation)**: Every pixel the mouse moves is compared against that original snapshot to determine the new size or position.
-3. **Mouseup (The Release)**: All interaction flags are reset to prevent accidental movements.
-
-
-
----
-
-## Visual Stability & Rotated Bounds
-A common challenge with DOM-based editors is that rotation changes an element's visual footprint. Standard width checks do not account for tilted boxes. This project uses `getBoundingClientRect()` to track the **Rotated Bounding Box**, ensuring that even when a box is tilted, its corners will not clip through the canvas walls.
+## Technical Methodology: The Snapshot Approach
+To maintain stability and prevent glitches, the system captures state "Snapshots":
+1. **Mousedown (Capture)**: Stores initial Width, Height, Left, Top, and Mouse Coordinates.
+2. **Mousemove (Delta Calculation)**: Calculates the change (Delta) between current mouse position and the captured snapshot to apply updates.
+3. **Mouseup (Commit)**: Resets all interaction flags to prevent accidental movements.
 
 ---
 
 ## Roadmap (Remaining Sections)
-* **Section 4**: Simple Layers Panel (z-index and stacking order).
 * **Section 5**: Basic Properties Panel (Color, Width, Height inputs).
 * **Section 6**: Keyboard Interactions (Delete and Arrow keys).
 * **Section 7**: Persistence via localStorage.
@@ -70,4 +68,4 @@ A common challenge with DOM-based editors is that rotation changes an element's 
 ### How to Run
 1. Clone the repository.
 2. Open `index.html` in any modern browser.
-3. Add elements and use the handles to build your layout.
+3. Use the top controls to add elements and the Layers Panel to manage your stack.
