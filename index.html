@@ -1,35 +1,55 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mini Figma Editor</title>
-  <link rel="icon" type="image/png" href="/Images/figma.png">
-  <link rel="stylesheet" href="style.css">
-</head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mini Figma Editor</title>
+    <link rel="icon" type="image/png" href="/Images/figma.png" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
 
-<body>
-  <main>
-    <div class="top-controls">
-      <button id="addRectBtn">Add Rectangle</button>
-      <button id="addTextBtn">Add Text</button>
-      <button id="removeBtn">Remove</button>
-    </div>
-
-    <div class="editor">
-      <div class="layers-panel">
-        <h3>Layers</h3>
-        <div id="layersList"></div>
-        <div class="layer-controls">
-          <button id="moveUpBtn">Move Up</button>
-          <button id="moveDownBtn">Move Down</button>
-        </div>
+  <body>
+    <main>
+      <div class="top-controls">
+        <button id="addRectBtn">Add Rectangle</button>
+        <button id="addTextBtn">Add Text</button>
+        <button id="removeBtn">Remove</button>
       </div>
 
-      <div class="canvas"></div>
-    </div>
-  </main>
+      <div class="editor">
+        <div class="layers-panel">
+          <h3>Layers</h3>
+          <div id="layersList"></div>
+          <div class="layer-controls">
+            <button id="moveUpBtn">Move Up</button>
+            <button id="moveDownBtn">Move Down</button>
+          </div>
+        </div>
 
-  <script src="script.js"></script>
-</body>
+        <div class="workspace">
+          <div class="canvas-wrapper">
+            <div class="canvas"></div>
+          </div>
+        </div>
+
+        <div class="properties-panel">
+          <h3>Properties</h3>
+
+          <label>X <input type="number" id="propX" /></label>
+          <label>Y <input type="number" id="propY" /></label>
+          <label>Width <input type="number" id="propW" /></label>
+          <label>Height <input type="number" id="propH" /></label>
+          <label>Rotation (deg) <input type="number" id="propRotate" /></label>
+
+          <label>Background <input type="color" id="propColor" /></label>
+
+          <div id="textOnlyProperty" style="display: none">
+            <label>Text Content <input type="text" id="propText" /></label>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
 </html>
