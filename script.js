@@ -473,3 +473,92 @@ moveDownBtn.onclick = () => {
     renderLayersPanel();
   }
 };
+
+// Helper function: value ko min aur max ke beech constraint karta hai
+// Math.max/min dono use karke boundary check karta hai
+// Example: clamp(150, 0, 100) → 100 (max se zyada nahi)
+// Example: clamp(-10, 0, 100) → 0 (min se kam nahi)
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+// Global keyboard event listener - Delete aur Arrow keys handle karta hai
+document.addEventListener("keydown", (e) => {
+  // Agar koi element selected nahi hai to keyboard kuch nahi karta
+  if (!selectedElement) return;
+
+  // Arrow keys se kitne pixels move karenge (nudge amount)
+  const STEP = 5;
+
+  // Canvas aur element ki boundaries nikalo (boundary check ke liye)
+  const canvasRect = canvas.getBoundingClientRect();
+  const elRect = selectedElement.getBoundingClientRect();
+
+  // Element ki current position store karo
+  let left = selectedElement.offsetLeft;
+  let top = selectedElement.offsetTop;
+
+  // DELETE ya BACKSPACE key = element delete karo
+  if (e.key === "Delete" || e.key === "Backspace") {
+    e.preventDefault(); // browser ka default behavior (back page) roko
+
+    // Layers array se element remove
+    layers = layers.filter(el => el !== selectedElement);
+    removeControls(selectedElement); // handles hata do
+    selectedElement.remove(); // DOM se delete
+    selectedElement = null; // selection clear
+
+    // Sab sync karo
+    updateZIndexes();
+    syncDOMOrder();
+    renderLayersPanel();
+
+    return; // baaki code skip karo
+  }
+
+  // Arrow keys se movement (nudging)
+  // Switch statement se key ke basis par position update
+  switch (e.key) {
+    case "ArrowLeft":
+      left -= STEP; // left me 5px move
+      break;
+    case "ArrowRight":
+      left += STEP; // right me 5px move
+      break;
+    case "ArrowUp":
+      top -= STEP; // upar 5px move
+      break;
+    case "ArrowDown":
+      top += STEP; // neeche 5px move
+      break;
+    default:
+      return; // koi aur key hai to ignore karo
+  }
+
+  e.preventDefault(); // page scroll nahi hona chahiye
+
+  // Canvas ke andar rehne ke liye position ko clamp karo
+  // Left: 0 se lekar (canvas width - element width) tak
+  left = clamp(
+    left,
+    0,
+    canvas.clientWidth - selectedElement.offsetWidth
+  );
+
+  // Top: 0 se lekar (canvas height - element height) tak
+  top = clamp(
+    top,
+    0,
+    canvas.clientHeight - selectedElement.offsetHeight
+  );
+
+  // Naya position apply karo
+  selectedElement.style.left = `${left}px`;
+  selectedElement.style.top = `${top}px`;
+
+  // Properties panel update karo (agar function exist karta hai)
+  // Type checking isliye ki error na aaye agar panel nahi hai to
+  if (typeof updatePropertiesPanel === "function") {
+    updatePropertiesPanel();
+  }
+});
