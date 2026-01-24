@@ -19,6 +19,8 @@ const propColor = document.querySelector("#propColor");
 const propText = document.querySelector("#propText");
 const textOnlyContainer = document.querySelector("#textOnlyProperty");
 
+const STORAGE_KEY = "mini-figma-canvas";
+
 // Currently selected element (null = koi nahi)
 let selectedElement = null;
 
@@ -257,6 +259,74 @@ function updateZIndexes() {
   });
 }
 
+function saveToLocalStorage() {
+  const data = layers.map((el) => ({
+    id: el.id,
+    type: el.dataset.type,
+    x: parseInt(el.style.left),
+    y: parseInt(el.style.top),
+    width: parseInt(el.style.width),
+    height: parseInt(el.style.height),
+    rotation: parseFloat(el.dataset.rotation || 0),
+    color: el.style.backgroundColor || "",
+    text: el.dataset.type === "text" ? el.textContent : "",
+  }));
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function loadFromLocalStorage() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return;
+
+  const data = JSON.parse(raw);
+
+  // Clear existing elements
+  layers.forEach((el) => el.remove());
+  layers = [];
+  selectedElement = null;
+
+  // RESET COUNTER to 0 so we can find the highest ID
+  elementCounter = 0;
+
+  data.forEach((item) => {
+    // Logic to prevent duplicate IDs in the future
+    const idNum = parseInt(item.id.split('-')[1]); 
+    if (idNum > elementCounter) {
+      elementCounter = idNum;
+    }
+
+    const el = createBaseElement(item.type, item.width, item.height);
+
+    el.id = item.id;
+    el.style.left = item.x + "px";
+    el.style.top = item.y + "px";
+    el.style.width = item.width + "px";
+    el.style.height = item.height + "px";
+    el.dataset.rotation = item.rotation;
+    el.style.transform = `rotate(${item.rotation}deg)`;
+
+    if (item.type === "rectangle") {
+      el.classList.add("rect");
+      if (item.color) el.style.backgroundColor = item.color;
+    }
+
+    if (item.type === "text") {
+      el.classList.add("text-box");
+      el.textContent = item.text;
+      if (item.color) el.style.backgroundColor = item.color;
+    }
+
+    canvas.appendChild(el);
+    layers.push(el);
+  });
+
+  updateZIndexes();
+  syncDOMOrder();
+  renderLayersPanel();
+}
+
+
 // Rectangle add button
 addRectBtn.onclick = () => {
   const r = createBaseElement("rectangle", 80, 80);
@@ -268,6 +338,7 @@ addRectBtn.onclick = () => {
   updateZIndexes();
   syncDOMOrder();
   renderLayersPanel();
+  saveToLocalStorage()
 };
 
 // Text box add button
@@ -282,6 +353,7 @@ addTextBtn.onclick = () => {
   updateZIndexes();
   syncDOMOrder();
   renderLayersPanel();
+  saveToLocalStorage()
 };
 
 // Selected element delete karta hai
@@ -297,6 +369,7 @@ removeBtn.onclick = () => {
   updateZIndexes();
   syncDOMOrder();
   renderLayersPanel();
+  saveToLocalStorage();
 };
 
 // Global mousemove - drag/resize/rotate yahin handle hota hai
@@ -385,6 +458,8 @@ document.addEventListener("mouseup", () => {
   isResizing = false;
   isRotating = false;
   currentHandle = null;
+
+  saveToLocalStorage();
 });
 
 // Canvas pe click = deselect
@@ -411,41 +486,47 @@ canvas.onclick = (e) => {
 propX.oninput = () => {
   if (!selectedElement) return;
   selectedElement.style.left = `${propX.value}px`;
+  saveToLocalStorage();
 };
 
 propY.oninput = () => {
   if (!selectedElement) return;
   selectedElement.style.top = `${propY.value}px`;
+  saveToLocalStorage();
 };
 
 propW.oninput = () => {
   if (!selectedElement) return;
   selectedElement.style.width = `${Math.max(propW.value, MIN_SIZE)}px`;
+  saveToLocalStorage();
 };
 
 propH.oninput = () => {
   if (!selectedElement) return;
   selectedElement.style.height = `${Math.max(propH.value, MIN_SIZE)}px`;
+  saveToLocalStorage();
 };
 
 propRotate.oninput = () => {
   if (!selectedElement) return;
   selectedElement.dataset.rotation = propRotate.value;
   selectedElement.style.transform = `rotate(${propRotate.value}deg)`;
+  saveToLocalStorage();
 };
 
 propColor.oninput = () => {
   if (!selectedElement) return;
   selectedElement.style.backgroundColor = propColor.value;
+  saveToLocalStorage();
 };
 
 propText.oninput = () => {
   if (!selectedElement) return;
   if (selectedElement.dataset.type === "text") {
     selectedElement.textContent = propText.value;
+    saveToLocalStorage();
   }
 };
-
 // Move Up = stacking me aage (higher z-index)
 moveUpBtn.onclick = () => {
   if (!selectedElement) return;
@@ -457,6 +538,7 @@ moveUpBtn.onclick = () => {
     updateZIndexes();
     syncDOMOrder();
     renderLayersPanel();
+    saveToLocalStorage()
   }
 };
 
@@ -471,6 +553,7 @@ moveDownBtn.onclick = () => {
     updateZIndexes();
     syncDOMOrder();
     renderLayersPanel();
+     saveToLocalStorage()
   }
 };
 
@@ -513,6 +596,7 @@ document.addEventListener("keydown", (e) => {
     syncDOMOrder();
     renderLayersPanel();
 
+    saveToLocalStorage();
     return; // baaki code skip karo
   }
 
@@ -561,4 +645,8 @@ document.addEventListener("keydown", (e) => {
   if (typeof updatePropertiesPanel === "function") {
     updatePropertiesPanel();
   }
+
+  saveToLocalStorage();
 });
+
+loadFromLocalStorage();
