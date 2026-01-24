@@ -1,261 +1,499 @@
+/* CSS Variables: Global color palette and sizing */
 :root {
   --primary-dark: #30364F;
   --secondary-muted: #ACBAC4;
   --surface-warm: #E1D9BC;
   --background-light: #F0F0DB;
+  --danger-color: #d9534f;
+  
+  --sidebar-width: 260px;
+  --sidebar-width-small: 200px;
 }
 
-/* ---------------- RESET ---------------- */
+/* Basic reset: Remove default browser styling */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html,
-body {
+/* Full height layout with overflow hidden (scrolling happens in panels) */
+html, body {
   height: 100%;
   width: 100%;
   background-color: var(--background-light);
-  font-family: Arial, sans-serif;
-  overflow: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden; 
 }
 
-/* ---------------- APP WRAPPER ---------------- */
+/* Main container: Full viewport dimensions */
 main {
-  height: 100%;
+  height: 100vh;
+  width: 100vw;
   display: flex;
-  flex-direction: column;
+  min-width: 768px; /* Prevent layout break on mobile */
 }
 
-/* ---------------- TOP CONTROLS ---------------- */
-.top-controls {
-  padding: 10px 16px;
-}
-
-/* Buttons */
-button {
-  padding: 10px 16px;
-  margin-right: 8px;
-  background-color: var(--primary-dark);
-  color: var(--background-light);
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #3a4160;
-}
-
-button:active {
-  transform: scale(0.97);
-}
-
-/* ---------------- MAIN EDITOR LAYOUT ---------------- */
+/* Editor wrapper: 3-column layout (left panel, workspace, right panel) */
 .editor {
   flex: 1;
   display: flex;
   height: 100%;
+  width: 100%;
   overflow: hidden;
 }
 
-/* ---------------- LEFT PANEL (LAYERS) ---------------- */
+/* Left sidebar: Tools, export options, and layers list */
 .layers-panel {
-  width: 240px;
+  width: var(--sidebar-width);
   height: 100%;
   background-color: var(--surface-warm);
-  border-right: 2px solid var(--secondary-muted);
-  padding: 12px;
+  border-right: 1px solid var(--secondary-muted);
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  flex-shrink: 0; /* Don't shrink on resize */
+  transition: width 0.2s ease;
+  overflow-y: auto;
 }
 
-/* Layers panel title */
-.layers-panel h3 {
-  margin-bottom: 10px;
-  font-size: 16px;
+/* Section headings: Uppercase and compact */
+.panel-section h3 {
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--primary-dark);
+  opacity: 0.7;
+}
+
+/* Horizontal divider between sections */
+.panel-divider {
+  border: none;
+  border-top: 1px solid var(--secondary-muted);
+  opacity: 0.5;
+  margin: 5px 0;
+}
+
+/* Flex-grow container: Expands to fill available space (for layers list) */
+.flex-grow {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* Required for proper flex scrolling */
+}
+
+/* Button container: Vertical stack */
+.tool-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Default button styling: Dark background with rounded corners */
+button {
+  width: 100%;
+  padding: 10px;
+  background-color: var(--primary-dark);
+  color: var(--background-light);
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.1s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Hover effect: Subtle lift and darker shade */
+button:hover {
+  background-color: #3a4160;
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* Secondary buttons: Transparent with border (export buttons) */
+.secondary-btn {
+  background-color: transparent;
+  border: 1px solid var(--primary-dark);
   color: var(--primary-dark);
 }
 
-#layersList {
-  margin-bottom: 10px;
-}
-
-.layer-item {
-  padding: 6px 8px;
-  background-color: var(--background-light);
-  border: 1px solid var(--secondary-muted);
-  margin-bottom: 6px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.layer-item.active {
+.secondary-btn:hover {
   background-color: var(--primary-dark);
   color: var(--background-light);
 }
 
+/* Danger button: Red theme (remove button) */
+.danger-btn {
+  background-color: transparent;
+  border: 1px solid var(--danger-color);
+  color: var(--danger-color);
+}
+
+.danger-btn:hover {
+  background-color: var(--danger-color);
+  color: white;
+  border-color: var(--danger-color);
+}
+
+/* Layer reordering buttons: Horizontal layout */
 .layer-controls {
   display: flex;
-  gap: 6px;
-  margin-top: 10px;
+  gap: 5px;
+  margin-bottom: 10px;
 }
 
-/* ---------------- CENTER WORKSPACE ---------------- */
+.layer-controls button {
+  padding: 6px;
+  font-size: 11px;
+}
+
+/* Layers list: Scrollable container for elements */
+#layersList {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+/* Custom scrollbar: Thin and subtle */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.1);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.2);
+}
+
+/* Individual layer item: Clickable list entry */
+.layer-item {
+  padding: 8px 10px;
+  border-radius: 4px;
+  margin-bottom: 2px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--primary-dark);
+  border: 1px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Truncate long names with ... */
+  display: flex;
+  align-items: center;
+}
+
+.layer-item:hover {
+  background-color: rgba(48, 54, 79, 0.05);
+}
+
+/* Active layer: Currently selected element */
+.layer-item.active {
+  background-color: #e0e5ec;
+  color: var(--primary-dark);
+  font-weight: 600;
+  border-color: var(--secondary-muted);
+}
+
+/* Center workspace: Scrollable canvas area with dot grid background */
 .workspace {
   flex: 1;
+  background-color: #E5E5E5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   overflow: auto;
-  padding: 40px 60px;
-  background-color: var(--background-light);
-
-  overflow: auto;
-}
-
-/* Canvas (artboard) */
-.canvas {
-  width: 1200px;
-  height: 800px;
-  background-color: var(--surface-warm);
-  border: 2px dashed var(--secondary-muted);
   position: relative;
-
-  /* Floating feel */
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  background-image: radial-gradient(#ccc 1px, transparent 1px); /* Dot grid pattern */
+  background-size: 20px 20px;
 }
 
+/* Canvas wrapper: Padding around canvas for scrolling space */
 .canvas-wrapper {
-  min-width: max-content;
-  min-height: max-content;
+  padding: 100px;
+  min-width: min-content;
+  min-height: min-content;
 }
 
-/* ---------------- RIGHT PANEL (PROPERTIES) ---------------- */
+/* Canvas (Artboard): Main design area */
+.canvas {
+  width: 800px;
+  height: 600px;
+  background-color: #ffffff;
+  border: 1px solid #dcdcdc;
+  position: relative;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+}
+
+/* Right sidebar: Properties inspector panel */
 .properties-panel {
-  width: 260px;
+  width: var(--sidebar-width);
   height: 100%;
   background-color: var(--surface-warm);
-  border-left: 2px solid var(--secondary-muted);
-  padding: 15px;
+  border-left: 1px solid var(--secondary-muted);
+  padding: 20px;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
+  overflow-y: auto;
+  transition: width 0.2s ease;
 }
 
 .properties-panel h3 {
   margin-bottom: 15px;
-  font-size: 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
   color: var(--primary-dark);
-  border-bottom: 1px solid var(--secondary-muted);
-  padding-bottom: 5px;
+  opacity: 0.7;
 }
 
+/* Property labels: Space-between layout (label left, input right) */
 .properties-panel label {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 13px;
+  font-size: 12px;
   margin-bottom: 12px;
   color: var(--primary-dark);
-  font-weight: bold;
+  font-weight: 500;
 }
 
+/* Unified input styling: All inputs have consistent size and appearance */
 .properties-panel input {
-  width: 110px;
-  padding: 4px;
-  border: 1px solid var(--secondary-muted);
-  background-color: var(--background-light);
+  width: 90px;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  background-color: #fff;
   border-radius: 4px;
   color: var(--primary-dark);
+  font-size: 12px;
   outline: none;
+  transition: border 0.2s, box-shadow 0.2s;
+  font-family: inherit; 
 }
 
+/* Focus state: Blue border with subtle shadow */
 .properties-panel input:focus {
   border-color: var(--primary-dark);
+  box-shadow: 0 0 0 2px rgba(48, 54, 79, 0.1);
+}
+
+/* Number inputs: Right-aligned text */
+.properties-panel input[type="number"] {
+  text-align: right;
+}
+
+/* Color input: Pointer cursor and consistent width */
+.properties-panel input[type="color"] {
+  padding: 2px;
+  cursor: pointer;
+  width: 90px;
+}
+
+/* Text content property: Separate section for text elements */
+#textOnlyProperty {
+  margin-top: 5px;
+}
+
+#textOnlyProperty label {
+  flex-direction: column; /* Label above input */
+  align-items: flex-start;
+  gap: 6px;
 }
 
 #textOnlyProperty input {
-  width: 100%;
+  width: 100%; /* Full width text input */
+  text-align: left;
 }
 
-/* ---------------- CANVAS ELEMENTS ---------------- */
+/* Rectangle element: Default dark background */
 .rect {
   width: 80px;
   height: 80px;
   background-color: var(--primary-dark);
-  border: 2px solid var(--secondary-muted);
+  border: 1px solid rgba(0,0,0,0.1);
   position: absolute;
+  cursor: move;
 }
 
+/* Text box element: Transparent with centered text */
 .text-box {
-  width: 120px;
-  height: 40px;
-  background-color: var(--background-light);
-  border: 1.5px solid var(--secondary-muted);
+  min-width: 120px;
+  min-height: 24px;
+
+  padding: 6px 8px;
+
+  background-color: transparent;
+  border: 1px solid transparent;
+
   color: var(--primary-dark);
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 16px;
+  line-height: 1.3;
+
   position: absolute;
-  user-select: none;
+  cursor: move;
+  user-select: text;
+
+  white-space: pre-wrap;      /* Enter creates new line */
+  word-wrap: break-word;      /* Long words wrap */
+  overflow: visible;          /* Text always visible */
 }
 
-/* Selected outline */
+/* Hover effect: Figma-style blue outline */
+.rect:hover, .text-box:hover {
+  outline: 1px solid #18A0FB; 
+}
+
+/* Selected element: Thicker blue outline */
 .selected {
-  outline: 2px solid var(--primary-dark);
-  outline-offset: 2px;
+  outline: 2px solid #18A0FB;
+  z-index: 9999 !important;
+}
+.selected:hover {
+  outline: 2px solid #18A0FB; 
 }
 
-/* ---------------- HANDLES ---------------- */
+/* Resize handles: Corner squares for resizing */
 .resize-handle {
   width: 8px;
   height: 8px;
-  background-color: var(--primary-dark);
+  background-color: #fff;
+  border: 1px solid #18A0FB;
   position: absolute;
-  z-index: 10;
+  z-index: 10000;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
-.resize-handle.top-left {
-  top: -4px;
-  left: -4px;
-  cursor: nwse-resize;
-}
+/* Handle positions and resize cursors */
+.resize-handle.top-left { top: -5px; left: -5px; cursor: nwse-resize; }
+.resize-handle.top-right { top: -5px; right: -5px; cursor: nesw-resize; }
+.resize-handle.bottom-left { bottom: -5px; left: -5px; cursor: nesw-resize; }
+.resize-handle.bottom-right { bottom: -5px; right: -5px; cursor: nwse-resize; }
 
-.resize-handle.top-right {
-  top: -4px;
-  right: -4px;
-  cursor: nesw-resize;
-}
-
-.resize-handle.bottom-left {
-  bottom: -4px;
-  left: -4px;
-  cursor: nesw-resize;
-}
-
-.resize-handle.bottom-right {
-  bottom: -4px;
-  right: -4px;
-  cursor: nwse-resize;
-}
-
+/* Rotate handle: Circle with connecting line to element */
 .rotate-handle {
-  width: 12px;
-  height: 12px;
-  background-color: var(--primary-dark);
+  width: 10px;
+  height: 10px;
+  background-color: #fff;
+  border: 1px solid #18A0FB;
   border-radius: 50%;
   position: absolute;
-  top: -25px;
+  top: -22px;
   left: 50%;
   transform: translateX(-50%);
   cursor: grab;
+  z-index: 10000;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
+/* Connecting line between element and rotate handle */
 .rotate-handle::after {
   content: "";
-  width: 2px;
-  height: 15px;
-  background-color: var(--primary-dark);
+  width: 1px;
+  height: 10px;
+  background-color: #18A0FB;
   position: absolute;
-  bottom: -15px;
+  bottom: -12px;
   left: 50%;
   transform: translateX(-50%);
+}
+
+/* Floating toolbar: Centered at bottom of canvas */
+.floating-toolbar {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #2C2C2C;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 50px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+}
+
+/* Icon buttons: Square with centered icon */
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #FFFFFF;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  padding: 0;
+}
+
+.icon-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: none;
+}
+
+/* Active tool: Blue background */
+.icon-btn.active {
+  background-color: #0D99FF;
+  color: white;
+}
+
+/* Toolbar separator: Vertical line between tool groups */
+.toolbar-separator {
+  width: 1px;
+  height: 20px;
+  background-color: rgba(255, 255, 255, 0.2);
+  margin: 0 4px;
+}
+
+/* Hand tool mode: Cursor changes to grab/grabbing */
+.workspace.hand-mode {
+  cursor: grab;
+}
+
+.workspace.hand-mode:active {
+  cursor: grabbing;
+}
+
+/* Responsive: Narrower sidebars on smaller screens */
+@media (max-width: 1200px) {
+  .layers-panel, .properties-panel {
+    width: var(--sidebar-width-small);
+    padding: 12px;
+  }
+  
+  /* Inputs also get slightly narrower */
+  .properties-panel input, 
+  .properties-panel input[type="color"] {
+    width: 70px;
+  }
+  
+  /* Text input stays full width */
+  #textOnlyProperty input {
+    width: 100%;
+  }
+
+  button {
+    padding: 8px;
+    font-size: 11px;
+  }
 }

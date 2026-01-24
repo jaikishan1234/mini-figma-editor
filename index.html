@@ -4,52 +4,84 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mini Figma Editor</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="icon" type="image/png" href="/Images/figma.png" />
     <link rel="stylesheet" href="style.css" />
   </head>
 
   <body>
     <main>
-      <div class="top-controls">
-        <button id="addRectBtn">Add Rectangle</button>
-        <button id="addTextBtn">Add Text</button>
-        <button id="removeBtn">Remove</button>
-      </div>
-
       <div class="editor">
+        
         <div class="layers-panel">
-          <h3>Layers</h3>
-          <div id="layersList"></div>
-          <div class="layer-controls">
-            <button id="moveUpBtn">Move Up</button>
-            <button id="moveDownBtn">Move Down</button>
+          <div class="panel-section">
+            <h3>Tools</h3>
+            <div class="tool-buttons">
+              <button id="addRectBtn">Add Rectangle</button>
+              <button id="addTextBtn">Add Text</button>
+              <button id="removeBtn" class="danger-btn">Remove</button>
+            </div>
+          </div>
+          <hr class="panel-divider">
+          <div class="panel-section">
+            <h3>Export</h3>
+            <div class="tool-buttons">
+              <button onclick="exportJSON()" class="secondary-btn">Export JSON</button>
+              <button onclick="exportHTML()" class="secondary-btn">Export HTML</button>
+            </div>
+          </div>
+          <hr class="panel-divider">
+          <div class="panel-section flex-grow">
+            <h3>Layers</h3>
+            <div class="layer-controls">
+              <button id="moveUpBtn">Up</button>
+              <button id="moveDownBtn">Down</button>
+            </div>
+            <div id="layersList"></div>
           </div>
         </div>
 
-        <div class="workspace">
+        <div class="workspace" id="workspaceContainer">
           <div class="canvas-wrapper">
             <div class="canvas"></div>
+          </div>
+
+          <div class="floating-toolbar">
+            <button id="toolSelect" class="icon-btn active" title="Move (V)">
+              <i class="ri-cursor-fill"></i>
+            </button>
+            
+            <button id="toolHand" class="icon-btn" title="Hand (H)">
+              <i class="ri-hand"></i>
+            </button>
+
+            <div class="toolbar-separator"></div>
+
+            <button id="toolRect" class="icon-btn" title="Rectangle (R)">
+              <i class="ri-checkbox-blank-line"></i>
+            </button>
+
+            <button id="toolText" class="icon-btn" title="Text (T)">
+              <i class="ri-text"></i>
+            </button>
           </div>
         </div>
 
         <div class="properties-panel">
           <h3>Properties</h3>
-
           <label>X <input type="number" id="propX" /></label>
           <label>Y <input type="number" id="propY" /></label>
           <label>Width <input type="number" id="propW" /></label>
           <label>Height <input type="number" id="propH" /></label>
-          <label>Rotation (deg) <input type="number" id="propRotate" /></label>
-
+          <label>Rotation <input type="number" id="propRotate" /></label>
           <label>Background <input type="color" id="propColor" /></label>
-
           <div id="textOnlyProperty" style="display: none">
             <label>Text Content <input type="text" id="propText" /></label>
           </div>
         </div>
+
       </div>
     </main>
-
     <script src="script.js"></script>
   </body>
 </html>
